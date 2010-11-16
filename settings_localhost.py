@@ -87,7 +87,7 @@ TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
-	"/home/cedric/Developpement/Dev/libs/aesia/django/abe/templates/", 
+	"/var/www/abe/templates/", 
 )
 TEMPLATE_CONTEXT_PROCESSORS = ("django.contrib.auth.context_processors.auth",
 "django.core.context_processors.debug",
@@ -95,7 +95,6 @@ TEMPLATE_CONTEXT_PROCESSORS = ("django.contrib.auth.context_processors.auth",
 "django.core.context_processors.i18n",
 "django.contrib.messages.context_processors.messages", 
 "abe.context_processors.media_url",)
-
 
 INSTALLED_APPS = (
     'django.contrib.auth',

@@ -34,14 +34,14 @@ class ComponentAdmin(admin.ModelAdmin):
 				)
 
 class TicketAdmin(admin.ModelAdmin):
-	list_display = ('active', 'status', '__unicode__', 'pain_percent', 'component','creator', 'creation_date', 'reviewer','update_date', )
+	list_display = ('__unicode__', 'pain_percent', 'component','active', 'status', 'creator', 'creation_date', 'reviewer','update_date', )
 	list_filter = ('active','creation_date','component')
 	list_display_links = ('__unicode__',)
-	list_editable = ('reviewer', 'active',)
+	list_editable = ('reviewer', 'active','status')
 	search_fields = ('name',)
 	fieldsets = (
 				 ( _(u'Propriétés'), { 'fields': ('name','description',) } ),
-				 ( _(u'Contexte'), { 'fields': ('type','priority','likelihood','component', 'contextual_data') } ),
+				 ( _(u'Contexte'), { 'fields': ('type','priority','likelihood','component', 'contextual_data', 'attached_url') } ),
 				 ( _(u'Status'), {'fields':('active', 'status', 'planified_to_milestone', 'closed_in_milestone') }), 
 				 ( _(u'Affectation'), { 'fields': ('reviewer','reviewer_note') } ),
 				)

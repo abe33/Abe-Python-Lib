@@ -69,7 +69,7 @@ class DictField(models.TextField):
 		if value != "" and value is not None : 
 			assert isinstance(value, dict)
 			value = json.dumps(value, cls=DjangoJSONEncoder )
-		return super( DictField, self).get_db_prep_save( value )
+		return super( DictField, self).get_db_prep_save( value=value,  connection=connection )
 
 # Valeur maximum de pénibilité que peut obtenir un ticket
 MAX_POSSIBLE_PAIN_SCORE = 175
@@ -280,6 +280,14 @@ class Ticket(models.Model):
 												null=True, 
 												blank=True, 
 												help_text=_(u"Un objet contenant des données supplémentaires de contexte concernant le bug.") )
+
+	attached_url = models.URLField( _(u"Lien vers un fichier joint"), 
+														max_length=200, 
+														verify_exists=True,
+														default=None, 
+														null=True, 
+														blank=True, 
+														help_text=_(u"") )
 
 	def pain_as_int (self):
 		if self.pain is not None :
