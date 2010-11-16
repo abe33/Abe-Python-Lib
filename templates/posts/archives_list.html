@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% load i18n posts %}
+
+{% block content %}
+<h2>{{ page_title }}</h2>
+<div id="archives">
+    <table cellpadding="0" cellspacing="0" border="0">
+        <thead>
+            <tr><th></th><th>
+				<span class="post-count">{% blocktrans %}Total Billets : {{total_count}}{% endblocktrans%}</span>
+			</th></tr>
+        </thead>
+        <tbody>
+    {% for o in archives_counts %}{% url post_by_month year=o.date.year month=o.date.month as month_url %}
+            <tr>
+                <td class="label"><a href="{{month_url }}" >{{ o.date|date:"b Y" }}</a></td>
+                <td><div  style="width:{{ o.ratio }}%;" class="post-bar">{{ o.count }}</div> </td>
+            </tr>
+    {% endfor %}
+      </tbody>
+    </table> 
+</div>
+{% endblock %}

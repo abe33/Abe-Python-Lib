@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% load i18n tickets %}
+
+{% block extrastyle %}
+<link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}bugs/css/pain_colors.css" />
+<!--<link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}bugs/css/tickets_list.css" />-->
+{% endblock %}
+
+{% block content %}
+
+{% milestone_header milestone component %}
+
+<div id="ticket_tools">
+{% url ticket_create as new_url %}
+{% url tickets_list as list_url %}
+<p>
+ <a href="{{ new_url }}" class="add">{% trans 'Nouveau Ticket' %}</a> |
+ 
+{% if components_list %}
+
+<select id="comps" onchange="window.location = this.value;">
+<option value="{% url tickets_list %}" {% if component == None %}selected="selected"{% endif %}>{% trans 'Composant' %}</option>
+{% for comp in components_list %}
+
+<option value="{% url tickets_by_component comp.name %}" {% if component.name == comp.name %}selected="selected"{% endif %}>{{ comp.name }}</option>
+
+
+{% endfor %}
+</select>
+{% endif %}
+ 
+ {% if component %}
+ <a href="{{ list_url }}" >{% trans 'Tous les tickets' %}</a> |
+{% endif %}
+
+
+
+</p>
+ </div>
+
+<a name="top"></a>
+<table id="tickets_list" class="pad" cellspacing="0">
+<thead>
+	<tr>
+		<th width="3%">{% trans 'P' %}</th>
+		<th width="50%" align="left">{% trans 'Nom' %}</th>
+        <th width="15%" align="left">{% trans 'Composant' %}</th>
+		<th width="20%" align="left">{% trans 'Cr&eacute;ateur' %}</th>
+		<th width="8%" align="left">{% trans 'Date' %}</th>
+		<th width="2%" align="center">{% trans 'Affect&eacute;' %}</th>		
+		{% if user.is_staff %}
+		<th width="2%" align="center"></th>
+		{% endif %}
+	</tr>
+</thead>
+
+<tbody>
+{% for ticket in tickets_list %}
+{% url ticket_detail ticket.id as the_url %}
+	{% ifchanged ticket.block_milestone %}{% if not forloop.first %}
+	<tr class="release_limit"><td colspan="{% if user.is_staff %}7{% else %}6{% endif %}">
+		{% trans 'Tol&eacute;rance du cycle de d&eacute;veloppement : ' %}<span class="max_pain_level">{{ milestone.max_pain_level }}%</span>
+		<a href="#top" class="top" title="{% trans 'Retourner en haut de page' %}"><img src="{{ MEDIA_URL }}bugreport/img/bullet_arrow_up.png" alt="top"/></a>
+	</td></tr>
+	{% endif %}{% endifchanged %}
+	{% spaceless %}
+    <tr class="ticket {% pain_css ticket %}">
+		<td align="center">{{ ticket.pain_as_int }}%</td>
+		<td><a href="{{ the_url }}">{{ ticket.name }}</a></td>
+        {% if component %}
+        <td>{{ ticket.component }}</td>
+		{% else %}
+         <td><a href="{% url tickets_by_component ticket.component.name %}">{{ ticket.component }}</a></td>
+        {% endif %}
+        <td>{% user_name ticket.creator %}</td>
+		<td><span class="date">{{ ticket.creation_date|date:"j/n/Y" }}</span></td>
+		<td align="center">
+		{% if ticket.reviewer %}
+			<img src="{{ MEDIA_URL }}img/accept.png" title="{% trans 'Le ticket est affect&eacute &agrav; ' %}{% user_name ticket.reviewer %}"/>
+		{% else %}
+			{% if ticket.block_milestone and user.is_staff %}
+				<a href="{{ the_url }}affect" title="{% trans "M'affecter ce ticket" %}"><img src="{{ MEDIA_URL }}img/add.png" alt="{% trans "M'affecter ce ticket" %}"/></a>
+			{% endif %}
+		{% endif %}
+		</td>	
+		{% if user.is_staff %}
+			<td class="controls" align="right"><a href="{{ the_url }}edit" title="{% trans '&Eacute;diter ce ticket' %}"><img src="{{ MEDIA_URL }}bugreport/img/report_edit.png"/></a></td>
+		{% endif %}
+	</tr>
+	{% endspaceless %}
+{% endfor %}
+	<tr><td colspan="{% if user.is_staff %}7{% else %}6{% endif %}">
+		<a href="#top" class="top" title="{% trans 'Retourner en haut de page' %}"><img src="{{ MEDIA_URL }}bugreport/img/bullet_arrow_up.png" alt="top"/></a>
+	</td></tr>
+</tbody></table>{% endblock content %}

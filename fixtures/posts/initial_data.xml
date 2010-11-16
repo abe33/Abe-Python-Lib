@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<django-objects version="1.0"><object pk="1" model="posts.postcategory"><field type="CharField" name="name">Test</field><field type="TextField" name="description">&lt;p&gt;
+	La cat&amp;eacute;gorie Test est l&amp;agrave; afin de fournir une cat&amp;eacute;gorie par d&amp;eacute;faut lors de l&amp;#39;installation de l&amp;#39;application.&lt;/p&gt;
+</field><field type="DateTimeField" name="creation_date">2010-11-11 13:57:17</field><field type="DateTimeField" name="update_date">2010-11-11 13:57:17</field><field type="BooleanField" name="allow_comments">True</field></object><object pk="1" model="posts.post"><field type="CharField" name="name">Hello World</field><field type="CharField" name="slug">hello-world</field><field type="TextField" name="excerpt">&lt;p&gt;
+	Ceci est un billet d&amp;#39;introduction permettant de tester l&amp;#39;application en mode ind&amp;eacute;pendante.&lt;/p&gt;
+</field><field type="TextField" name="content">&lt;p&gt;
+	Normalement, il est tr&amp;egrave;s simple d&amp;#39;int&amp;eacute;grer cette application dans n&amp;#39;importe lequel de vos projets.&lt;/p&gt;
+</field><field type="BooleanField" name="published">True</field><field type="CharField" name="tags">test, hello-world</field><field to="posts.postcategory" name="category" rel="ManyToOneRel">1</field><field type="BooleanField" name="allow_comments">True</field><field type="BooleanField" name="orphan">False</field><field type="CharField" name="orphan_id"></field><field type="DateTimeField" name="creation_date">2010-11-11 13:57:27</field><field type="DateTimeField" name="update_date">2010-11-11 14:23:21</field><field type="DateTimeField" name="published_date">2010-11-11 13:57:27</field></object></django-objects>
