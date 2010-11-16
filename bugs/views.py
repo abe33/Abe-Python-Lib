@@ -17,13 +17,30 @@ from abe.bugs import settings as mssettings
 num_ticket_per_page = "4"
 start_page = "1"
 
-class TicketForm(forms.ModelForm):
-	#active = forms.BooleanField(widget=forms.HiddenInput)
-	#creator = forms.ChoiceField(widget=forms.HiddenInput)
-
+class UserTicketForm(forms.ModelForm):
 	class Meta:
 		model = Ticket
-		exclude = ('active','creator', )
+		fields = ['name', 'description', ]
+
+class StaffTicketForm(forms.ModelForm):
+	class Meta:
+		model = Ticket
+		fields = ['name', 'description', 'type','priority','likelihood', 'allow_comments']
+
+class SuperUserTicketForm(forms.ModelForm):
+	class Meta:
+		model = Ticket
+		exclude = ('creator', )
+
+def get_ticket_form( user, data=None,  instance=None ):
+	if user.is_superuser:
+		return SuperUserTicketForm( data=data,  instance=instance)
+	
+	elif user.is_staff:
+		return StaffTicketForm( data=data,  instance=instance )
+	
+	else:
+		return UserTicketForm( data=data,  instance=instance )
 
 def tickets_list_generic (   request, 
 										tickets_list, 
@@ -135,7 +152,7 @@ def ticket_new ( request ):
 	if request.method == 'POST':
 	   
 		ticket = Ticket(creator=request.user, active=True)
-		form = TicketForm(request.POST, instance=ticket)
+		form = get_ticket_form(request.user,  request.POST, ticket)
 
 		if form.is_valid():
 			form.save()
@@ -147,7 +164,7 @@ def ticket_new ( request ):
 								context_instance=RequestContext(request))
 	else :
 		return render_to_response('bugs/ticket_edit.html', 
-								{ 'form': TicketForm(), 
+								{ 'form':  get_ticket_form(request.user), 
 								'ticket_url':reverse("ticket_create"), },
 								context_instance=RequestContext(request))
 
@@ -156,7 +173,7 @@ def ticket_edit ( request, id ):
 	try:
 		ticket = Ticket.objects.get(pk=id)
 		if request.method == 'ticket': # If the form has been submitted...
-			form = TicketForm(request.ticket, instance=ticket) # A form bound to the ticket data
+			form = get_ticket_form(request.user,  request.ticket, ticket) # A form bound to the ticket data
 			if form.is_valid(): # All validation rules pass
 				# Process the data in form.cleaned_data
 				# ...
@@ -170,7 +187,7 @@ def ticket_edit ( request, id ):
 									},
 								  context_instance=RequestContext(request))
 		else:
-			form = TicketForm(instance=ticket) # An unbound form
+			form = get_ticket_form( user=request.user, instance=ticket) # An unbound form
 			return render_to_response('bugs/ticket_edit.html', 
 								  { 'form': form,
 									'labels' : get_labels_for(ticket), 

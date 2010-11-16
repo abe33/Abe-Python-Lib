@@ -1,3 +1,3 @@
 #!/bin/bash
 
-python ../manage.py reset --settings=abe.settings_localhost --pythonpath=/var/www posts comments auth voting bugs
+python ../manage.py reset --settings=abe.settings_localhost --pythonpath=/var/www posts comments auth bugs

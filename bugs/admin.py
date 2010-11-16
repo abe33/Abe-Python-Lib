@@ -34,15 +34,16 @@ class ComponentAdmin(admin.ModelAdmin):
 				)
 
 class TicketAdmin(admin.ModelAdmin):
-	list_display = ('active', '__unicode__', 'pain_percent', 'component','creator', 'creation_date', 'reviewer','update_date', )
+	list_display = ('active', 'status', '__unicode__', 'pain_percent', 'component','creator', 'creation_date', 'reviewer','update_date', )
 	list_filter = ('active','creation_date','component')
 	list_display_links = ('__unicode__',)
 	list_editable = ('reviewer', 'active',)
 	search_fields = ('name',)
 	fieldsets = (
 				 ( _(u'Propriétés'), { 'fields': ('name','description',) } ),
-				 ( _(u'Contexte'), { 'fields': ('type','priority','likelihood','component', ) } ),
-				 ( _(u'Options Avancés'), { 'fields': ('active','reviewer',) } ),
+				 ( _(u'Contexte'), { 'fields': ('type','priority','likelihood','component', 'contextual_data') } ),
+				 ( _(u'Status'), {'fields':('active', 'status', 'planified_to_milestone', 'closed_in_milestone') }), 
+				 ( _(u'Affectation'), { 'fields': ('reviewer','reviewer_note') } ),
 				)
 
 	def pain_percent (self, obj):
