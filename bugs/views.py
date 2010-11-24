@@ -10,11 +10,13 @@ from django.template.defaultfilters import capfirst
 from django.utils.html import escape 
 from django.db.models import Model 
 from django.utils.translation import ugettext as _
-
+from django.core.serializers.json import DjangoJSONEncoder
+from django.utils import simplejson as json
 from abe.bugs.models import *
 from abe.bugs import settings as mssettings
 
-num_ticket_per_page = "4"
+
+num_ticket_per_page = "50"
 start_page = "1"
 
 class UserTicketForm(forms.ModelForm):
@@ -22,19 +24,45 @@ class UserTicketForm(forms.ModelForm):
 		model = Ticket
 		fields = ['name', 'description', ]
 
-class StaffTicketForm(forms.ModelForm):
+class StaffTicketForm(UserTicketForm):
+	likelihood = forms.ChoiceField(	widget=forms.RadioSelect(), 
+													choices=LIKELIHOOD_CHOICES, 
+													help_text=_(u"Sélectionnez la valeur correspondant "
+																		u"au problème que vous rencontrez."),  
+													required=False, 
+													initial=1, 
+													label=_(u"Dans quelle proportions ce bug ce manifeste t'il ?")	)
+	priority = forms.ChoiceField( widget=forms.RadioSelect(),  
+												choices=PRIORITY_CHOICES, 
+												help_text=_(u"Sélectionnez la valeur correspondant "
+																	u"au problème que vous rencontrez."), 
+												required=False, 
+												initial=1, 
+												label=_(u"De quel manière ce bug vous affecte t'il ?"))
+	type = forms.ChoiceField( widget=forms.RadioSelect(),  
+											choices=TYPE_CHOICES, 
+											help_text=_(u"Sélectionnez la valeur correspondant "
+																u"au problème que vous rencontrez."),  
+											required=False, 
+											initial=1, 
+											label=_(u"De quel type de bug s'agit-il ?"))
+
 	class Meta:
 		model = Ticket
 		fields = ['name', 'description', 'type','priority','likelihood', 'allow_comments']
 
-class SuperUserTicketForm(forms.ModelForm):
+class SuperUserTicketForm(StaffTicketForm):
+	def __init__(self,  user,  data=None,  instance = None):
+		super( SuperUserTicketForm,  self ).__init__(data=data,  instance=instance)
+		#if instance.assignees is not None and instance.assignees == user :
+	
 	class Meta:
 		model = Ticket
 		exclude = ('creator', )
 
 def get_ticket_form( user, data=None,  instance=None ):
 	if user.is_superuser:
-		return SuperUserTicketForm( data=data,  instance=instance)
+		return SuperUserTicketForm( user, data=data,  instance=instance)
 	
 	elif user.is_staff:
 		return StaffTicketForm( data=data,  instance=instance )
@@ -131,10 +159,11 @@ def ticket_detail ( request, id ):
 		ticket = Ticket.objects.get(pk=id)
 	except Ticket.DoesNotExist:
 		raise Http404
-	return render_to_response( 'bugs/ticket_detail.html', 
-							   { 'ticket': ticket,
-								 'milestone' : MileStone.objects.get(active=True),
-								 'labels' : get_labels_for(ticket),},
+	return render_to_response( 'bugs/ticket_view.html', 
+							   { 
+									'ticket': ticket,
+									'milestone' : MileStone.objects.get(active=True),
+								},
 							   context_instance=RequestContext(request) )
 
 @login_required
@@ -144,36 +173,71 @@ def ticket_affect (request, id ):
 	except Ticket.DoesNotExist:
 		raise Http404
 
-	ticket.reviewer = request.user
+	ticket.assignees = request.user
 	ticket.save()
 	return redirect( reverse("tickets_list"))
 
 def ticket_new ( request ):
+	print "ticket_new"
+	print request.method
 	if request.method == 'POST':
-	   
 		ticket = Ticket(creator=request.user, active=True)
-		form = get_ticket_form(request.user,  request.POST, ticket)
-
+		print ticket 
+		form = get_ticket_form( request.user,  request.POST, ticket )
+		print form
+		
 		if form.is_valid():
+			print "form is valid"
+			
+			if not ticket.is_valid_int( ticket.type ) :
+				ticket.type = 1
+			
+			if not ticket.is_valid_int( ticket.likelihood ) :
+				ticket.likelihood = 1
+				
+			if not ticket.is_valid_int( ticket.priority ) :
+				ticket.priority = 1
+			
+			if not ticket.is_valid_int( ticket.status ) :
+				ticket.status = 0
+			
+			if not ticket.active :
+				ticket.active = True
+			
 			form.save()
-			return redirect(reverse("tickets_list"))
+			print "form saved"
+
+			if "js" in request.POST :
+				return HttpResponse(content= json.dumps({'status':'1', }, cls=DjangoJSONEncoder ))
+			else:
+				return redirect(reverse("tickets_list"))
 		else:
-			return render_to_response('bugs/ticket_edit.html', 
-								{ 'form': form, 
-									'ticket_url': reverse("ticket_create"),  },
-								context_instance=RequestContext(request))
+			print "form is not valid"
+			if "js" in request.POST :
+				return HttpResponse(content= json.dumps({'status':'0', 'errors':form.errors}, cls=DjangoJSONEncoder ))
+			else :
+				return render_to_response('bugs/ticket_edit.html', 
+									{ 
+										'ticket':ticket, 
+										'milestone' : MileStone.objects.get(active=True),
+										'form': form, 
+										'ticket_url': reverse("ticket_create"),  },
+									context_instance=RequestContext(request))
 	else :
 		return render_to_response('bugs/ticket_edit.html', 
-								{ 'form':  get_ticket_form(request.user), 
-								'ticket_url':reverse("ticket_create"), },
+								{
+									'ticket':None, 
+									'milestone' : MileStone.objects.get(active=True),
+									'form':  get_ticket_form(request.user), 
+									'ticket_url':reverse("ticket_create"), },
 								context_instance=RequestContext(request))
 
 @login_required
 def ticket_edit ( request, id ):
 	try:
 		ticket = Ticket.objects.get(pk=id)
-		if request.method == 'ticket': # If the form has been submitted...
-			form = get_ticket_form(request.user,  request.ticket, ticket) # A form bound to the ticket data
+		if request.method == 'POST': # If the form has been submitted...
+			form = get_ticket_form(request.user,  request.POST , ticket) # A form bound to the ticket data
 			if form.is_valid(): # All validation rules pass
 				# Process the data in form.cleaned_data
 				# ...
@@ -181,16 +245,20 @@ def ticket_edit ( request, id ):
 				return redirect(reverse("tickets_list")) # Redirect after ticket
 			else:
 				return render_to_response('bugs/ticket_edit.html', 
-								  { 'form': form,
-									'labels' : get_labels_for(ticket),
+								  { 
+									'ticket':ticket, 
+									'milestone' : MileStone.objects.get(active=True),
+									'form': form,
 									'ticket_url':reverse("ticket_edit", kwargs={'id':id,} ), 
 									},
 								  context_instance=RequestContext(request))
 		else:
 			form = get_ticket_form( user=request.user, instance=ticket) # An unbound form
 			return render_to_response('bugs/ticket_edit.html', 
-								  { 'form': form,
-									'labels' : get_labels_for(ticket), 
+								  {
+									'ticket':ticket, 
+									'milestone' : MileStone.objects.get(active=True),
+									'form': form,
 									'ticket_url':reverse("ticket_edit", kwargs={'id':id,} ),
 									}, 
 								  context_instance=RequestContext(request))
@@ -198,24 +266,3 @@ def ticket_edit ( request, id ):
 	except Ticket.DoesNotExist:
 		raise Http404
 	return redirect(reverse("tickets_list"))
-
-def get_labels_for(model, cap=True, esc=True): 
-	labels = {} 
-	for field in model._meta.fields: 
-		label = field.verbose_name 
-		if cap : 
-			label = capfirst(label) 
-		if esc: 
-			label = escape(label) 
-		labels[field.name] = label 
-	return labels 
-
-def with_labels(context, cap=True, esc=True): 
-	result = context.copy() 
-	for k, v in context.iteritems(): 
-		if isinstance(v, Model): 
-			result[k + '_labels'] = get_labels_for(v, cap, esc) 
-		elif hasattr(v, '__getitem__') and len(v) > 0: 
-			if isinstance(v[0], Model): 
-				result[k + '_labels'] = get_labels_for(v[0], cap, esc) 
-	return result 

@@ -3,27 +3,17 @@
 
 {% block extrastyle %}
 <link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}bugs/css/pain_colors.css" />
-<!--<link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}bugs/css/tickets_list.css" />
-<link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}bugs/css/ticket_detail.css" />-->
+<link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}bugs/css/tickets_list.css" />
+<link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}bugs/css/ticket_form.css" />
 {% endblock %}
 
 {% block content %}
-
+{% milestone_header milestone %}
 <div class="pad" id="ticket_tools">
 {% url tickets_list as list_url %}
 
 <p><a href="{{ list_url }}" >{% trans 'Tous les tickets' %}</a> |</p>
  </div>
  
- 
-<form action="{% url ticket_create %}" method="POST">{% csrf_token %}
-	<div id="ticket_form">
-		{{ form.as_p }}
-		
-		<p class="submit">
-			<input type="submit" value="{% trans "Sauver" %}" />
-		</p>
-	</div>
-</form>
-
+{% render_ticket_form request ticket %}
 {% endblock %}

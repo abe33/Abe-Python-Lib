@@ -1,4 +1,4 @@
-{% load i18n posts %}
+{% load i18n posts tickets %}
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en"><head>
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
@@ -27,8 +27,11 @@
 		 
 		{% block extrascript %}{% endblock %}
 		
-		<!--<link rel="stylesheet" href="{{ MEDIA_URL }}css/css_reset.css"/>-->
+		<link href='http://fonts.googleapis.com/css?family=Cantarell:regular,italic,bold,bolditalic&subset=latin' rel='stylesheet' type='text/css'>
+		<link rel="stylesheet" href="{{ MEDIA_URL }}css/css_reset.css"/>
+		<link rel="stylesheet" href="{{ MEDIA_URL }}css/default.css"/>
 		<link rel="stylesheet" href="{{ MEDIA_URL }}posts/css/posts.css"/>
+		<link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}bugs/css/ticket_form.css" />
 		
 		{% block extrastyle %}{% endblock %}
 
@@ -55,6 +58,7 @@
 		
 		<div id="footer">
 			<footer>{% block footer %}{% endblock %}
+			{% render_ajax_ticket_form request %}
 			</footer>
 		</div>
 

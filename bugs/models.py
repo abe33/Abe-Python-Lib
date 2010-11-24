@@ -32,24 +32,24 @@ TYPE_CHOICES = (
 )  
 # Choix prédéfinis pour la priorité du problème
 PRIORITY_CHOICES = (
-    (1, _(u"1 - Nuisance - Pas un gros problème mais est detectable. N'a probablement aucun effet sur les ventes.")),
-    (2, _(u"2 - Plaie - Les utilisateurs  une fois qu'il l'ont découvert. Un nombre restreint n'acheterais pas à cause de ça.")),
-    (3, _(u"3 - Certains utilisateurs n'achèteront probablement pas le produit. Sera indiqué dans un test. Clairement un problème notable.")),
-    (4, _(u"4 - Majeur - Un utilisateur retournerait le produit. L'équipe doit stopper toute sortie pour ce bug.")),
+    (1, _(u"1 - Nuisance - Pas un gros problème mais est detectable. N'impacte en rien l'expérience de l'utilisateur.")),
+    (2, _(u"2 - Plaie Mineure - Affecte le bon fonctionnement d'une tache peu ordinaire.")),
+    (3, _(u"3 - Plaie Moyenne - Clairement un problème notable.")),
+    (4, _(u"4 - Plaie Majeure - Impacte de manière très importante l'expérience de l'utilisateur, rend l'usage du produit périlleux. L'équipe doit stopper toute sortie pour ce bug.")),
     (5, _(u"5 - Critique - Bloque toute progression dans le travail quotidien.")),
 ) 
 # Choix prédéfinis pour la redondance du problème
 LIKELIHOOD_CHOICES = (
     (1, _(u"1 - Affecte pour ainsi dire personne.")),
-    (2, _(u"2 - Affecte seulement quelques personnes (<=25%).")),
-    (3, _(u"3 - Affecte près de la moitié des personnes (>25% & <=75%).")),
-    (4, _(u"4 - Affecte la plupart des joueurs (>75%).")),
+    (2, _(u"2 - Affecte seulement quelques personnes (n<25%).")),
+    (3, _(u"3 - Affecte près de la moitié des personnes (25%>n>75%).")),
+    (4, _(u"4 - Affecte la plupart des joueurs (n>75%).")),
     (5, _(u"5 - Affecte toutes les personnes.")),
 )
 # Status possible pour un ticket
 STATUS_CHOICES = (
 	(0, _(u"Non confirmé") ), 
-	(1, _(u"Comfirmé")), 
+	(1, _(u"Confirmé")), 
 	(2, _(u"Ouvert") ), 
 	(3, _(u"Résolu") ), 
 	(4, _(u"Non résolvable") ), 
@@ -180,15 +180,15 @@ class Ticket(models.Model):
 
 	description = models.TextField( _(u"Description"), 
 													blank=True,
-													help_text=_(u"Une bonne description de bug se compose de quatre parties :<br/><i>"
-																		u"<b>1</b> - La procédure permettant de reproduire le bug, si elle est connue, "
+													help_text=_(u"Une bonne description de bug se compose de quatre parties :<ol>"
+																		u"<li>La procédure permettant de reproduire le bug, si elle est connue, "
 																		u"autrement une description du contexte dans lequel le bug se produit, "
-																		u"les conditions de l'application à ce moment.<br/>"
-																		u"<b>2</b> - Le résultat actuel, à quoi conduit le bug.<br/>"
-																		u"<b>3</b> - Le résultat espéré, comment devrait se comporter l'application "
-																		u"en temps normal.<br/>"
-																		u"<b>4</b> - Un Workaround, s'il est possible d'en avoir un, et si celui-ci "
-																		u"est connu, permettant de contourner le problème.</i>" ) )
+																		u"les conditions de l'application à ce moment.</li>"
+																		u"<li> Le résultat actuel, à quoi conduit le bug.</li>"
+																		u"<li> Le résultat espéré, comment devrait se comporter l'application "
+																		u"en temps normal.</li>"
+																		u"<li> Un <a href='http://fr.wikipedia.org/wiki/Workaround' rel='nofollow'>Workaround</a>, s'il est possible d'en avoir un, et si celui-ci "
+																		u"est connu, permettant de contourner le problème.</li></ol>" ) )
 
 	pain = models.FloatField( _(u"Pénibilité Utilisateur"), 
 											null=True, 
@@ -200,21 +200,24 @@ class Ticket(models.Model):
 														 blank=True, 
 														 null=True, 
 														 help_text=_(u"Sélectionnez la valeur correspondant "
-																			u"au problème que vous rencontrez.") )
+																			u"au problème que vous rencontrez."), 
+														default=1)
 
 	priority = models.SmallIntegerField( _(u"De quel manière ce bug vous affecte t'il ?"), 
 															 choices=PRIORITY_CHOICES,
 															 blank=True, 
 															 null=True, 
 															 help_text=_(u"Sélectionnez la valeur correspondant au problème "
-																				u"que vous rencontrez.") )
+																				u"que vous rencontrez."), 
+															default=1)
 
 	likelihood = models.SmallIntegerField( _(u"Dans quelle proportions ce bug ce manifeste t'il ?"), 
 																choices=LIKELIHOOD_CHOICES,
 																blank=True, 
 																null=True, 
 																help_text=_(u"Sélectionnez la valeur correspondant au problème "
-																					u"que vous rencontrez." ) )
+																					u"que vous rencontrez." ), 
+																default=1)
 
 	active = models.BooleanField(_(u"Actif"), 
 												 default=True, 
@@ -226,7 +229,8 @@ class Ticket(models.Model):
 															help_text=_(u"Le status indique à quel phase en est la résolution du ticket. "
 																				u"Si le bug n'est pas reproductible il convient de le désactiver "
 																				u"et d'indiquer son status."), 
-															default=0)
+															default=0, 
+															blank=True)
 
 	component = models.ForeignKey ( "bugs.Component", 
 														  verbose_name= _(u"Composant"), 
@@ -239,17 +243,26 @@ class Ticket(models.Model):
 													verbose_name= _(u"Créateur"), 
 													related_name="ticket_creator" )
 
-	reviewer = models.ForeignKey ( "auth.User", 
-													 verbose_name= _(u"Relecteur"), 
-													 related_name="ticket_reviewer", 
-													 null=True, 
-													 blank=True,
-													 help_text=_(u"L'utilisateur prenant en charge ce ticket.") )
+	assignees = models.ManyToManyField ( "auth.User", 
+															 verbose_name= _(u"Affectations"), 
+															 related_name="ticket_assignees", 
+															 null=True, 
+															 blank=True,
+															 limit_choices_to={'is_superuser__exact':True}, 
+															 help_text=_(u"Le(s) utilisateur(s) prenant en charge la résolution de ce ticket.") )
 
-	reviewer_note = models.TextField( _(u"Note du relecteur"), 
+	assignee_head = models.ForeignKey( "auth.User", 
+															  verbose_name=_(u"Responsable"), 
+															  related_name="ticket_assignee_head", 
+															  null=True, 
+															  blank=True, 
+															  limit_choices_to={'is_superuser__exact':True}, 
+															  help_text=_(u"Le responsable en charge de la gestion de la résolution de ce ticket.") )
+	
+	assignee_note = models.TextField( _(u"Note des personnes en charge"), 
 													blank=True,
 													null=True, 
-													help_text=_(u"Une note rédigé par le relecteur." ) )
+													help_text=_(u"Une note rédigé par la(les) personnes en charge de la résolution du ticket." ) )
 
 	planified_to_milestone = models.ForeignKey ( "bugs.Milestone", 
 																		 verbose_name= _(u"Planification"), 
@@ -273,7 +286,8 @@ class Ticket(models.Model):
 																auto_now=True )
 
 	allow_comments = models.BooleanField(_(u"Commentable"),  
-																 default=True )
+																 default=True, 
+																 help_text=_(u"Les utilisateurs peuvent-t'ils laisser des commentaires sur ce ticket."))
 
 	contextual_data = DictField( _(u"Données contextuelles") , 
 												default=None, 
@@ -281,13 +295,14 @@ class Ticket(models.Model):
 												blank=True, 
 												help_text=_(u"Un objet contenant des données supplémentaires de contexte concernant le bug.") )
 
-	attached_url = models.URLField( _(u"Lien vers un fichier joint"), 
+	attached_url = models.URLField( _(u"Fichier joint"), 
 														max_length=200, 
 														verify_exists=True,
 														default=None, 
 														null=True, 
 														blank=True, 
-														help_text=_(u"") )
+														help_text=_(u"Un lien vers un fichier joint à ce ticket, il peut s'agir "
+																			u"par exemple d'une capture d'écran montrant les conséquences d'un bug.") )
 
 	def pain_as_int (self):
 		if self.pain is not None :
@@ -302,22 +317,68 @@ class Ticket(models.Model):
 			return False
 
 	def is_affected (self):
-		return self.reviewer is not None
+		return len( self.assignees.all() ) > 0
+
+	def has_assignees(self):
+		return len( self.assignees.all() ) > 0
+
+	def is_assignee ( user ):
+		return user in self.assignees.all()
 
 	def is_done(self):
 		return self.active is False
+	
+	def print_type( self, o ):
+		print o, type( o ),  self.is_valid_int( o )
+
+	def is_valid_int ( self,  value ):
+		return value is not None and value != ""
 
 	def save(self, **kwargs):
-		if self.type is not None and self.likelihood is not None and self.priority is not None :
+		print "save"
+		if self.is_valid_int(self.type) and self.is_valid_int(self.priority) and self.is_valid_int(self.likelihood):
 			self.pain = self.type * self.likelihood * self.priority * 100.0 / MAX_POSSIBLE_PAIN_SCORE
+		
 		super(Ticket, self).save(**kwargs)
-	
+		
 	def comments_count(self):
 		if self.allow_comments :
 			return Comment.objects.filter(object_pk=self.id,).count()
 		else :
 			return _(u"None")
 	comments_count.short_description = _(u"Commentaires")
+
+	def next_ticket(self):
+		objects = Ticket.objects.filter(active=True).order_by('-pain')
+		
+		if self in objects :
+			try:
+				a = list( objects.values_list("id", flat=True) )
+				i = a.index(self.pk)
+			except:
+				i = -1
+			if i > -1 and i+1 < len(a) : 
+				return objects[ i+1]
+			else:
+				return None
+		else:
+			return None
+			
+	def previous_ticket(self):
+		objects = Ticket.objects.filter(active=True).order_by('-pain')
+		
+		if self in objects :
+			try:
+				a = list( objects.values_list("id", flat=True) )
+				i = a.index(self.pk)
+			except:
+				i = -1
+			if i > -1 and i-1 > -1 : 
+				return objects[ i-1]
+			else:
+				return None
+		else:
+			return None
 
 	@models.permalink
 	def get_absolute_url(self):

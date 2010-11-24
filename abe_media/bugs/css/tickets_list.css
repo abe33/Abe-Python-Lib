@@ -1,0 +1,175 @@
+/*
+ * Simple style
+ */
+.date, .time, .user, .affect, .add {
+	padding-left:18px !important;
+	background-repeat:no-repeat;
+	background-position:0 center;
+}
+.date {
+	background-image:url(../img/date.png);
+	font-size:.8em;
+}
+.time {
+	background-image:url(../img/time.png);
+	font-size:.8em;
+} 
+.user {
+	background-image:url(../img/vcard.png);
+}
+.affect {
+	background-image:url(../img/add.png);
+}
+.add {
+	background-image:url(../img/note_add.png);
+}
+
+.public_text, 
+.private_text {
+	padding-left:18px;
+}
+.public_text {
+	background:transparent url(../img/accept.png) no-repeat;
+}
+.private_text {
+	background:transparent url(../img/delete.png) no-repeat;
+}
+
+.max_pain_level {
+	font-weight:bold;
+}
+
+.edit {
+	padding-left:22px !important;
+	background-repeat:no-repeat !important;
+	background-position:0.2em center !important;
+	background-image:url(../img/report_edit.png);
+}
+.description, .review {
+	margin:6px;
+	padding:3px;
+	border:1px solid #999;
+	background:#fff;
+	white-space: pre-wrap
+}
+
+/*
+ * Blocks styles and layouts
+ */
+div#milestone_infos {
+	padding:4px;
+	margin-top:10px;
+}
+tr.release_limit td a {
+	text-decoration:none;
+}
+
+div#ticket_pagination {
+	text-align:center;
+}
+div#ticket_tools,
+div#ticket_pagination {
+	background:#555;
+	color:#fff;
+	padding:4px;
+}
+div#ticket_tools ul>li,
+div#ticket_pagination ul>li {
+	display:inline;
+}
+div#ticket_pagination ul>li a,
+div#ticket_tools ul>li a {
+	padding:0px 3px;
+}
+div#ticket_pagination ul>li a:hover,
+div#ticket_tools ul>li a:hover {
+	background-color:#666;
+}
+div#ticket_pagination ul>li:before,
+div#ticket_tools ul>li:before {
+	content:"|";
+}
+div#ticket_pagination ul>li:first-child:before,
+div#ticket_tools ul>li:first-child:before {
+	content:"";
+}
+div#ticket_pagination a,
+div#ticket_tools a {
+	text-decoration:none;
+	color:#fff;
+}
+/* Milestone Header */
+div#milestone_infos.public {
+	/*background:#a8FB98;*/
+	background:#efefef;
+}
+div#milestone_infos.private {
+	/*background:#ff7777;*/
+	background:#efefef;
+}
+
+/* Table de la liste des tickets */
+table#tickets_list {
+	width:100%;
+	border-collapse:separate;
+}
+table#tickets_list th {
+	padding:4px 8px;
+	background:#333333;
+	color:#ffffff;
+}
+table#tickets_list th.th_date {
+	background-image:url(../img/date.png);
+}
+table#tickets_list th.th_comp {
+	background-image:url(../img/plugin.png);
+}
+table#tickets_list th.th_creator {
+	background-image:url(../img/user.png);
+}
+table#tickets_list th.th_affect {
+	background-image:url(../img/user_edit.png);
+}
+table#tickets_list th.th_pain {
+	background-image:url(../img/chart_bar.png);
+}
+table#tickets_list th.th_date, 
+table#tickets_list th.th_creator, 
+table#tickets_list th.th_affect, 
+table#tickets_list th.th_comp,
+table#tickets_list th.th_status,
+table#tickets_list th.th_pain,
+table#tickets_list th.th_name {
+	background-repeat:no-repeat;
+	background-position:center center;
+	text-indent:-9999px ;
+}
+table#tickets_list td {
+	vertical-align:middle;
+	padding:4px 8px;
+}
+table#tickets_list td.date {
+	background:none;
+	padding:0px !important;
+}
+table#tickets_list td .top {
+	float:right;
+}
+
+table#tickets_list td.date, table#tickets_list td.status, table#tickets_list td.component, table#tickets_list td.creator {
+	white-space:nowrap;
+	font-size:.8em;
+}
+table#tickets_list tr.ticket:hover td:first-child {
+	border-left:4px solid #333;
+	padding-left:4px;
+}
+table#tickets_list tr.release_limit td {
+	padding:2px 8px;
+	font-size:0.7em;
+	background:#333333;
+	color:#ffffff;
+}
+table#tickets_list tr.release_limit td a {
+	color:#fff;
+}

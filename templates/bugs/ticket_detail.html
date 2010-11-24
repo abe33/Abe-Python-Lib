@@ -1,77 +1,112 @@
-{% extends "base.html" %}
 {% load i18n tickets comments %}
-
-{% block extrastyle %}
-<link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}bugs/css/pain_colors.css" />
-<!--<link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}bugs/css/tickets_list.css" />
-<link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}bugs/css/ticket_detail.css" />-->
-{% endblock %}
-
-{% block content %}
-
-{% milestone_header milestone %}
-
-<div id="ticket_tools">
-<p>
- <a href="{% url ticket_create %}" class="add">{% trans 'Nouveau Ticket' %}</a> |
-	
-	{% if user.is_staff %}
-			<a href="{% url ticket_edit ticket.id %}" class="edit">{% trans '&Eacute;diter ce ticket' %}</a> |
-    {% endif %} 
-  <a href="{% url tickets_list %}" >{% trans 'Tous les tickets' %}</a> |
-  
-  {% if ticket.reviewer %}
-			<span class="accept">{% trans 'Le ticket est affect&eacute; &agrav; ' %}{% user_name ticket.reviewer %}</span> |
-	{% else %}
-		{% if ticket.block_milestone and user.is_staff %}
-				<a href="{% url ticket_affect ticket.id %}" >{% trans "M'affecter ce ticket" %}</a> |
-		{% endif %}
-	{% endif %}
-	
-</p>
- </div>
  
 {% url upain.bugreport.views.ticket_detail ticket.id as the_url %}
 
 <div id="ticket_detail">
-	<h1 class="{% pain_css ticket %}"><span class="painh1">{{ ticket.name }}</span></h1>
-	<p class="description">{{ ticket.description }}</p>
-	<dl class="properties">		
-		<dt>{{ labels.pain }}</dt>
-		<dd>{{ ticket.pain_as_int }}%</dd>
-		
-		<dt>{{ labels.type }}</dt>
-		<dd>{{ ticket.get_type_display }}</dd>
-		
-		<dt>{{ labels.priority }}</dt>
-		<dd>{{ ticket.get_priority_display }}</dd>
-		
-		<dt>{{ labels.likelihood }}</dt>
-		<dd>{{ ticket.get_likelihood_display }}</dd>
-		
-		<dt>{{ labels.creator }}</dt>
-		<dd>{% user_name ticket.creator %}</dd>
-		
-		<dt>{{ labels.reviewer }}</dt>
-		<dd>{% if ticket.reviewer %}{% user_name ticket.reviewer %}{% else %}Aucune{% endif %}</dd>
-		
-		<dt>{{ labels.creation_date }}</dt>
-		<dd>
-			<span class='date'>{{ ticket.creation_date|date:"j/n/Y" }}</span>
-			<span class='time'>{{ ticket.creation_date|date:"H:i:s" }}</span>
-		</dd>
-		<dt>{{ labels.update_date }}</dt>
-		<dd>
-			<span class='date'>{{ ticket.update_date|date:"j/n/Y" }}</span>
-			<span class='time'>{{ ticket.update_date|date:"H:i:s" }}</span>
-		</dd>
-	</dl>
+	<div class="ticket_header">
+		<h1>{{ ticket.name }}</h1>
+		<dl>
+		<dt>{% trans "Description" %}</dt>
+		<dd class="description">{% autoescape off %}{{ ticket.description }}{% endautoescape %}</dd>
+		{% if ticket.is_affected %}
+			{% if ticket.assignee_note %}
+				<dt>{% blocktrans %}Note des personnes en charge{% endblocktrans %}</dt>
+				<dd class="review">{{ ticket.assignee_note}}</dd>
+			{% endif%}
+		{% endif%}
+		</dl>
+	</div>
+	<div class="ticket_properties">
+		<fieldset>
+		<legend>{% trans "Propri&eacute;t&eacute;es" %}</legend>
+		<dl class="properties">		
+			<dt>{{ labels.pain }}</dt>
+			<dd class="pain {% pain_css ticket %}">{{ ticket.pain_as_int }}%</dd>
+			
+			<dt>{{ labels.type }}</dt>
+			<dd>{{ ticket.get_type_display }}</dd>
+			
+			<dt>{{ labels.priority }}</dt>
+			<dd>{{ ticket.get_priority_display }}</dd>
+			
+			<dt>{{ labels.likelihood }}</dt>
+			<dd>{{ ticket.get_likelihood_display }}</dd>
+			
+			<dt>{{ labels.component }}</dt>
+			<dd>{{ ticket.component }}</dd>
+			
+			<dt>{{ labels.attached_url }}</dt>
+			<dd>
+				{% if ticket.attached_url %}
+				<a href="{{ticket.attached_url }}" rel="nofollow">{{ ticket.attached_url }}</a>
+				{% else %}
+					{% trans "Aucun" %}
+				{% endif %}
+			</dd>
+		</dl>
+		</fieldset>
+	</div>
+	<div class="ticket_status" >
+		<fieldset>
+		<legend>{% trans "Status" %}</legend>
+		<dl class="status">
+
+			<dt>{{ labels.status }}</dt>
+			<dd>{{ ticket.get_status_display }}</dd>
+			
+			<dt>{{ labels.planified_to_milestone }}</dt>
+			<dd>{{ ticket.planified_to_milestone }}</dd>
+			
+			<dt>{{ labels.closed_in_milestone }}</dt>
+			<dd>{{ ticket.closed_in_milestone }}</dd>
+			
+			<dt>{{ labels.creator }}</dt>
+			<dd><a href="{{ ticket.creator.get_absolute_url }}" class="user">{% user_name ticket.creator %}</a></dd>
+			</dl>
+		</fieldset>
+		<fieldset>
+		<legend>{% trans "&Eacute;quipe"%}</legend>
+			<dl class="team">
+			<dt><!--{{ labels.assignees }}-->{% trans "Affectations"%}</dt>
+			<dd>{% if ticket.is_affected %}
+					{% for u in ticket.assignees.all %}
+						<a href="{{ u.get_absolute_url }}" class="user">{% user_name u %}</a>{% if not forloop.last %}, {% endif %}
+					{% endfor %}
+				{% else %}
+						{% trans "Aucunes" %}
+				{% endif %}</dd>
+			{% if ticket.is_affected %}
+			<dt>{{ labels.assignee_head }}</dt>
+			<dd>{% if ticket.assignee_head %}{% user_name ticket.assignee_head %}{% else %}{% trans "Aucun" %}{% endif %}</dd>
+			{% endif %}
+			<dt>{{ labels.creation_date }}</dt>
+			<dd>
+				<span class='date'>{{ ticket.creation_date|date:"j/n/Y" }}</span>
+				<span class='time'>{{ ticket.creation_date|date:"H:i:s" }}</span>
+			</dd>
+			<dt>{{ labels.update_date }}</dt>
+			<dd>
+				<span class='date'>{{ ticket.update_date|date:"j/n/Y" }}</span>
+				<span class='time'>{{ ticket.update_date|date:"H:i:s" }}</span>
+			</dd>
+		</dl>
+		</fieldset>
+	</div>
 </div>
+
+{% if next_ticket or previous_ticket %} 
+<div id="ticket_pagination">
+<ul>
+	{% if previous_ticket%}<li><a href="{% url ticket_detail previous_ticket.id %}">{% trans 'Ticket pr&eacute;c&eacute;dent : '%}{{ previous_ticket }}({{previous_ticket.pain_as_int}}%)</a></li>{% endif %}
+	{% if next_ticket%}<li><a href="{% url ticket_detail next_ticket.id %}">{% trans 'Ticket suivant : '%}{{ next_ticket }}({{next_ticket.pain_as_int}}%)</a></li>{% endif %}
+</ul>
+</div>
+{% endif %}
+
 {% if ticket.allow_comments %}
-	<div id="comments-bloc">
+	<div id="ticket_comments">
 	{% get_comment_count for ticket as comment_count %}
 	<h3>{% blocktrans count comment_count as counter %}{{ comment_count }} Commentaire{% plural %}{{ comment_count }} Commentaires{% endblocktrans %}</h3>
 	{% render_comment_list for ticket %}</div>
-	<div id="comment-form">{% block comment_form %}{% render_comment_form for ticket %}{% endblock %}</div>
+	<div id="ticket_comments_form">{% block comment_form %}{% render_comment_form for ticket %}{% endblock %}</div>
 {% endif %}
-{% endblock content %}

@@ -7,6 +7,9 @@
 {% if rss_page_url %}
 <a href="{{rss_page_url}}" class="feed" title="{% trans "RSS pour la page" %} {{page_title }}"><img src="{{ MEDIA_URL }}img/feed-icon-28x28.png" alt="{% trans "RSS pour la page" %} {{page_title }}"></a>
 {% endif %}
+<div id="menu">
+	{% render_categories_list %}
+</div>
 <div id="posts">
 <section>
 {% for post in posts_list %}

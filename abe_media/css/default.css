@@ -1,0 +1,46 @@
+
+body{
+	font-size:1em;
+	font-family: 'Cantarell', arial, serif;
+}
+h1,h2,h3{
+	margin-top:0.2em;
+	margin-bottom:0.5em;
+}
+
+
+h1{
+	font-size:1.4em;
+}
+h2{
+	font-size:1.1em;
+}
+h3{
+	font-size:1.05em;
+}
+
+a {
+}
+a:hover{
+}
+
+
+#content {
+	width:700px;
+	margin:auto;
+}
+
+#nav {
+}
+
+#contentnav {
+}
+
+#header {
+}
+
+#footer {
+}
+
+
+

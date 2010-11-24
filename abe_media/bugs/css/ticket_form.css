@@ -1,0 +1,181 @@
+div#fast_form_container {
+	position:fixed;
+	top:5px;
+	left:5px;
+	width:500px;
+	box-shadow:1px 1px 6px #666;
+	-moz-box-shadow:1px 1px 6px #666;
+	-webkit-box-shadow:1px 1px 6px #666;
+	border-radius:12px;
+	background:#efefef;
+}
+div#fast_form_container div#ticket_form_div {
+	background:none;
+	padding-top:0px;
+}
+div#fast_form_container div#form_confirm {
+	background:#ccff88;
+	border-radius:6px;
+	border:2px groove #fff;
+	margin:8px;
+	padding:8px;
+	text-align:center;
+}
+div#fast_form_container div#form_confirm span {
+	display:block;
+	background:#fff;
+	border:1px solid #ccc;
+	border-radius:4px;
+	padding:6px;
+	font-size:.8em;
+	margin-top:6px;
+	text-align:left;
+}
+div#fast_form_container div#form_confirm span p {
+	margin-top:6px;
+}
+div#content div#ticket_form_div {
+	background:#efefef;
+}
+div#fast_form_container div#form_confirm h3 {
+	color:#333;
+	font-size:1em;
+	display:inline;
+	padding-left:20px;
+	background:transparent url(../img/accept.png) no-repeat left center;
+}
+div#ticket_form_div {
+	background:#fff;
+	padding:6px;
+	line-height:1em;
+}
+div#ticket_form_div fieldset {
+	margin:4px;
+	padding:4px;
+	border:2px groove #fff; 
+	border-radius:6px;
+}
+div#ticket_form_div legend {
+	padding:4px;
+	font-size:.8em;
+	font-weight:bold;
+	color:#666;
+}
+div#ticket_form_div legend input {
+	width:20px;
+	height:20px;
+	text-indent:-9999px;
+	background:#efefef url(../img/cancel.png) no-repeat center center;
+	border:none;
+	vertical-align:middle;
+}
+div#ticket_form_div dt {
+	font-size:0.8em;
+	font-weight:bold;
+	margin-top:4px;
+	margin-bottom:4px;
+	color:#333;
+	padding-left:6px;
+}
+div#ticket_form_div dd , 
+div#ticket_form_div label {
+	font-size:.8em;
+}
+
+div#ticket_form_div dd {
+	background:#ffffcc;
+	padding:6px;
+	border-radius:6px;
+}
+div#ticket_form_div dd ul, 
+div#ticket_form_div dd span.form {
+	background:#efefef;
+	border:1px solid #ccc;
+	padding:3px;
+	border-radius:6px;
+}
+div#ticket_form_div dd ul.errorlist {
+	margin-top:3px;
+	background:#ff3300;
+	color:white;
+	border:1px solid #f00;
+	padding-left:24px;
+	background-image:url(../img/error.png);
+	background-repeat:no-repeat;
+	background-position:3px center;
+}
+div#ticket_form_div dd span {
+	display:block;
+}
+div#ticket_form_div dd span.form {
+	padding-bottom:0px;
+}
+div#ticket_form_div dd span.form label {
+	font-size:1em;
+	margin-left:4px;
+}
+div#ticket_form_div dd span.help_text {
+	padding-bottom:0px;
+	margin-top:2px;
+	margin-bottom:0px;
+}
+div#ticket_form_div dd span.help_text a {
+	color:blue;
+}
+div#ticket_form_div dd span.help_text a:hover {
+	background:none;
+	text-decoration:underline;
+}
+div#ticket_form_div span {
+	color:#333;
+	font-size:.8em;
+	padding:4px;
+	padding-left:24px;
+	background-image:url(../img/lightbulb.png);
+	background-repeat:no-repeat;
+	background-position:3px center;
+}
+
+div#ticket_form_div input,
+div#ticket_form_div textarea {
+	width:100%;
+	margin-top:-3px;
+	margin-bottom:0px;
+	margin-left:-3px;
+}
+div#ticket_form_div select {
+	width:100%;
+}
+div#ticket_form_div dd ul input, 
+div#ticket_form_div dd span.form input {
+	margin:0;
+	margin-bottom:4px;
+	vertical-align:middle;
+}
+
+div#ticket_form_div input + .help_text,
+div#ticket_form_div textarea + .help_text {
+	/*width:100%;*/
+	margin-bottom:5px;
+	margin-left:-2px;
+	margin-right:-10px;
+}
+
+div#ticket_form_div span.help_text ol {
+	padding-left:28px;
+}
+div#ticket_form_div span.help_text ol li {
+	list-style:decimal;
+	list-style-position:outside;
+}
+
+div#ticket_form_div p.submit {
+	color:#000;
+	margin-top:10px;
+	text-align:right;
+	margin-right:4px;
+}
+div#ticket_form_div p.submit input {
+	width:auto;
+	margin:0px;
+}

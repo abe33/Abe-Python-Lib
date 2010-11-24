@@ -1,0 +1,44 @@
+#ticket_comments {
+	margin:0;
+}
+#ticket_comments h3 {
+	background:#333;
+	color:#fff;
+	margin:0;
+	padding:8px;
+	text-align:center;
+}
+#ticket_comments dl {
+	background:#efefef;
+	padding:4px;
+}
+#ticket_comments dt {
+
+}
+#ticket_comments dd {
+	margin:6px;
+	border:1px solid #ccc;
+	background:#fff;
+	padding:3px;
+	white-space:prewrap;
+}
+#ticket_comments_form {
+	background:#333;
+	color:#fff;
+	padding:8px;
+	overflow:hidden;
+}
+#ticket_comments_form label {
+	display:block;
+	margin-bottom:4px;
+}
+#ticket_comments_form input[type=text],
+#ticket_comments_form textarea {
+	display:block;
+	width:100%;
+	margin-left:-4px;
+	margin-bottom:4px;
+}
+#ticket_comments_form input[type=submit] {
+	float:right;
+}
