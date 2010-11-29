@@ -179,7 +179,6 @@ class Ticket(models.Model):
 																u"<i>Résultats non sauvegardés en fin de partie.</i>" ) )
 
 	description = models.TextField( _(u"Description"), 
-													blank=True,
 													help_text=_(u"Une bonne description de bug se compose de quatre parties :<ol>"
 																		u"<li>La procédure permettant de reproduire le bug, si elle est connue, "
 																		u"autrement une description du contexte dans lequel le bug se produit, "

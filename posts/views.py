@@ -7,11 +7,10 @@ from django.core.urlresolvers import reverse
 from django.utils.translation import ugettext as _
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q, Count
-
 from tagging.models import *
 
 from abe.posts.models import *
-
+from abe.missions.decorators import  *
 import math
 import re
 
@@ -143,6 +142,7 @@ def orphan_page( request, orphan_id ):
 												}, 
 												RequestContext( request ) )
 
+@mission_triggers('trigger#1')
 def post_list( request, page=start_page,  num=num_post_per_page ):
 	return post_list_generic( request,  
 										   Post.objects.filter(published=True, orphan=False).order_by("-published_date"), 

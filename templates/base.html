@@ -1,4 +1,4 @@
-{% load i18n posts tickets %}
+{% load i18n posts tickets missions %}
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en"><head>
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
@@ -37,6 +37,7 @@
 
 	</head>
 	<body>
+		{% render_mission_notification %}
 	
 		<div id="nav">
 			<nav>{% block nav %}{% endblock %}

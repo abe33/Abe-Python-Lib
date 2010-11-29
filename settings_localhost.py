@@ -75,6 +75,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+	'abe.missions.middleware.MissionMiddleware', 
 )
 # List of directories which contains the initial datas for the database
 FIXTURE_DIRS = (
@@ -108,4 +109,5 @@ INSTALLED_APPS = (
     'abe.posts', 
 	'abe.bugs', 
 	'tagging', 
+	'missions', 
 )

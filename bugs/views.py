@@ -178,17 +178,12 @@ def ticket_affect (request, id ):
 	return redirect( reverse("tickets_list"))
 
 def ticket_new ( request ):
-	print "ticket_new"
-	print request.method
 	if request.method == 'POST':
 		ticket = Ticket(creator=request.user, active=True)
-		print ticket 
 		form = get_ticket_form( request.user,  request.POST, ticket )
-		print form
 		
 		if form.is_valid():
-			print "form is valid"
-			
+
 			if not ticket.is_valid_int( ticket.type ) :
 				ticket.type = 1
 			
@@ -205,14 +200,12 @@ def ticket_new ( request ):
 				ticket.active = True
 			
 			form.save()
-			print "form saved"
 
 			if "js" in request.POST :
 				return HttpResponse(content= json.dumps({'status':'1', }, cls=DjangoJSONEncoder ))
 			else:
 				return redirect(reverse("tickets_list"))
 		else:
-			print "form is not valid"
 			if "js" in request.POST :
 				return HttpResponse(content= json.dumps({'status':'0', 'errors':form.errors}, cls=DjangoJSONEncoder ))
 			else :

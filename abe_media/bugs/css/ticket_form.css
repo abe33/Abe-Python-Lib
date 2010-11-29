@@ -13,6 +13,9 @@ div#fast_form_container div#ticket_form_div {
 	background:none;
 	padding-top:0px;
 }
+div#fast_form_container p.submit {
+	padding-bottom:4px;
+}
 div#fast_form_container div#form_confirm {
 	background:#ccff88;
 	border-radius:6px;

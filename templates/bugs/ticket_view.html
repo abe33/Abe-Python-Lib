@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% load i18n tickets comments %}
+
+{% block extrastyle %}
+<link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}bugs/css/pain_colors.css" />
+ <link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}bugs/css/tickets_list.css" />
+  <link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}bugs/css/ticket_comments.css" />
+<link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}bugs/css/ticket_detail.css" />
+{% endblock %}
+
+{% block content %} 
+	{% milestone_header milestone %}
+	<div id="ticket_tools">
+		<ul>
+		<li><a href="{% url ticket_create %}" class="add">{% trans 'Nouveau Ticket' %}</a></li>
+			{% if user.is_staff %}<li><a href="{% url ticket_edit ticket.id %}" class="edit">{% trans '&Eacute;diter ce ticket' %}</a></li>{% endif %}
+			 <li><a href="{% url tickets_list %}" >{% trans 'Tous les tickets' %}</a></li>
+			{% if ticket.assignee %}<li><span class="accept">{% trans 'Le ticket est affect&eacute; &agrave; ' %}{% user_name ticket.assignee %}</span></li>
+			{% else %}
+				{% if ticket.block_milestone and user.is_staff %}
+						<li><a href="{% url ticket_affect ticket.id %}" class="affect">{% trans "M'affecter ce ticket" %}</a></li>
+				{% endif %}
+			{% endif %}
+			
+		</ul>
+		 </div>
+	{% render_ticket ticket %}
+{% endblock content %}
