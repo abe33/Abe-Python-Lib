@@ -2,9 +2,11 @@
 from django.conf import settings
 from django.template import Library
 from django.contrib.auth.models import *
+
 from abe.bugs.views import *
 from abe.bugs.models import *
 from abe.utils import *
+from abe.bugs import settings
 
 register = Library()
 
@@ -184,15 +186,7 @@ def milestone_header(milestone, component=None):
 milestone_header = register.inclusion_tag("bugs/milestone_header.html")(milestone_header)
 
 
-PAIN_PREFIX = '.pain%s'
-PAIN_BLOCK_PREFIX = '.block'
-PAIN_AFFECTED_PREFIX = '.affected'
-PAIN_DONE_PREFIX = '.done'
 
-PAIN_COLOR = 0x999999
-PAIN_BLOCK_COLOR = 0xff6666
-PAIN_AFFECTED_COLOR = 0x66aaFF
-PAIN_DONE_COLOR = 0x66ff66
 
 def print_style(color,style_name):
 	i = 0
@@ -225,9 +219,9 @@ def print_pain_css ():
 
 		bugrepot/css/pain_colors.css
 	"""
-	css = print_style( PAIN_COLOR, PAIN_PREFIX )
-	css += print_style( PAIN_BLOCK_COLOR, PAIN_PREFIX + PAIN_BLOCK_PREFIX )
-	css += print_style( PAIN_AFFECTED_COLOR, PAIN_PREFIX  + PAIN_BLOCK_PREFIX + PAIN_AFFECTED_PREFIX )
-	css += print_style( PAIN_DONE_COLOR, PAIN_PREFIX + PAIN_BLOCK_PREFIX + PAIN_DONE_PREFIX )
+	css = print_style( settings.PAIN_COLOR, settings.PAIN_PREFIX )
+	css += print_style( settings.PAIN_BLOCK_COLOR, settings.PAIN_PREFIX + settings.PAIN_BLOCK_PREFIX )
+	css += print_style( settings.PAIN_AFFECTED_COLOR, settings.PAIN_PREFIX  + settings.PAIN_BLOCK_PREFIX + settings.PAIN_AFFECTED_PREFIX )
+	css += print_style( settings.PAIN_DONE_COLOR, settings.PAIN_PREFIX + settings.PAIN_BLOCK_PREFIX + settings.PAIN_DONE_PREFIX )
 	return css
 register.simple_tag( print_pain_css )

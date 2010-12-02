@@ -20,6 +20,6 @@ urlpatterns = patterns('abe.bugs',
 	url (r'ticket/(?P<id>\d+)/affect/$',															'views.ticket_affect',						name="ticket_affect"), 
 	
 	#AMF Gateway
-	#url (r'gateway/',																		'amfgateway.ticketsGateway',			name="ticket_gateway"),
+	url (r'gateway/',																								'amfgateway.tickets_gateway',			name="ticket_gateway"),
 
 )

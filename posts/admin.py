@@ -37,8 +37,8 @@ class PostAdmin(admin.ModelAdmin):
 	fieldsets = [
 		( 'Contenu',               {'fields': ['name','excerpt', 'content', 'allow_comments'] }),
 		( 'Classification',   {'fields': ['category','tags'] }),
-		( 'Publication',        {'fields': ['published','published_date'], 'classes': ['collapse'] }),
-		( 'Page Orpheline',   {'fields': ['orphan','orphan_id'], 'classes': ['collapse'] }),
+		( 'Publication',        {'fields': ['published','published_date'] }),
+		( 'Page Orpheline',   {'fields': ['orphan','orphan_id'] }),
 	]
 	class Media:
 		css = {"all": ("%scss/admin_enhancements.css" % locsettings.MEDIA_URL,)}

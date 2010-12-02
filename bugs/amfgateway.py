@@ -12,4 +12,4 @@ services = {
     # could include other functions as well
 }
 
-ticketsGateway = DjangoGateway(services)
+tickets_gateway = DjangoGateway(services)
