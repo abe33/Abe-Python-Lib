@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% load i18n tickets %}
+{% block extrastyle %}
+<link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}bugs/css/pain_colors.css" />
+<link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}bugs/css/tickets_list.css" />
+<link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}bugs/css/ticket_form.css" />
+<link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}bugs/css/ticket_detail.css" />
+<link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}bugs/css/ticket_comments.css" />
+{% endblock %}
+
+{% block content_header %}
+
+<a name="top"></a>
+
+{% milestone_header milestone component %}
+
+<div class="toolbar">
+<span class="legend">
+	<span class="pain100 block"></span>{% trans "Blocking ticket" %}, 
+	<span class="pain100 block killer"></span>{% trans "Killer bug ticket" %}, 
+	<span class="pain100 block affected"></span>{% trans "Affected ticket" %}
+</span>
+<h3>{% trans "My tickets" %}</h3>
+</div>
+{% render_user_tickets_table user %}
+
+
+<div id="ticket_tools" class="toolbar">
+<span class="legend">
+	<span class="pain100 block"></span>{% trans "Blocking ticket" %}, 
+	<span class="pain100 block killer"></span>{% trans "Killer bug ticket" %}, 
+	<span class="pain100 block affected"></span>{% trans "Affected ticket" %}
+</span>
+
+<h3>{{ page_title }}</h3>
+{% url ticket_create as new_url %}
+{% url tickets_list as list_url %}
+<ul>
+<li><a href="{% url tickets_list %}">{% trans 'All tickets' %}</a></li>
+{%block toolbar %}{% endblock %}
+</ul>
+</div>
+
+{% endblock %}

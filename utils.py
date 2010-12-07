@@ -1,14 +1,40 @@
 # -*- coding: utf-8 -*-
+from django import template
 from django.conf import settings
 from django.template import Library
 from django.contrib.auth.models import *
 from django.core.urlresolvers import reverse
-from django import template
+from django.shortcuts import render_to_response
+from django.contrib.admin.filterspecs import FilterSpec
+from django.utils.translation import ugettext as _
 
 from datetime import *
 
+from tagging.fields import TagField
+
 import hashlib
 import re
+
+class TagFilterSpec(FilterSpec):
+	def __init__(self, f, request, params, model, model_admin, **kwargs ):
+		super( TagFilterSpec, self).__init__(f, request, params, model, model_admin)
+		self.lookup_kwarg = '%s__contains' % f.name
+		self.lookup_val = request.GET.get(self.lookup_kwarg, None)
+		self.objects = model.tags.split(" ")
+		#self.objects = model.objects.all()
+
+	def choices(self, cl):
+		yield {'selected': self.lookup_val is None,
+				   'query_string': cl.get_query_string({}, [self.lookup_kwarg]),
+				   'display': _('All')}
+
+		for tag in self.objects:
+			tag = tag.strip()
+			yield {'selected':tag == self.lookup_val,
+						'query_string': cl.get_query_string({self.lookup_kwarg: tag}),
+						'display': tag }
+
+FilterSpec.filter_specs.insert(0, (lambda f: isinstance(f, TagField), TagFilterSpec))
 
 def get_class( name, path=None ):
 	if path is None or len(path)==0:
@@ -24,10 +50,28 @@ def get_class_with_path( path ):
 def get_classpath( cls ):
 	return "%s.%s" % ( cls.__dict__["__module__"], cls.__name__ )
 
-def date_from_string( d ):
-	r = re.compile("([\d]{4})-([\d]{1,2})-([\d]{1,2})")
-	res = r.search( d )
+def date_from_string( s ):
+	if s is None:
+		return None
+	if isinstance( s, date ):
+		return s
+	
+	r = re.compile("^([\d]{4})-([\d]{1,2})-([\d]{1,2})")
+	res = r.search( s )
 	return date( int(res.group(1)),  int(res.group(2)),  int(res.group(3)) )
+
+def some_in_list( a, b ):
+	n = 0
+	for o in a : 
+		if o in b :
+			n+=1
+	return n>=1
+
+def every_in_list( a, b ):
+	for o in a : 
+		if o not in b :
+			return False
+	return True
 
 def datetime_from_string( s ):
 	"""
@@ -48,6 +92,8 @@ def datetime_from_string( s ):
 	"""
 	if s is None:
 		return None
+	if isinstance( s, datetime ):
+		return s
 	# Split string in the form 2007-06-18 19:39:25.3300-07:00
 	# into its constituent date/time, microseconds, and
 	# timezone fields where microseconds and timezone are
@@ -99,6 +145,8 @@ def timedelta_from_string( s ):
 	"""
 	if s is None:
 		return None
+	if isinstance( s, timedelta ):
+		return s
 	
 	d = re.search(
 			r'((?P<days>\d+) day[s]*, )?(?P<hours>\d+):'
@@ -106,6 +154,13 @@ def timedelta_from_string( s ):
 			str(s)).groupdict(0)
 	return timedelta(**dict(( (key, int(value))
 							  for key, value in d.items() )))
+
+def crossdomain(request, user=None):
+    return render_to_response(
+                'crossdomain.xml',
+                {
+                },
+                mimetype="application/xhtml+xml")
 
 class BaseTemplateNode(template.Node):
 	def handle_token(cls, parser, token):

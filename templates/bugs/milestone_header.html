@@ -2,14 +2,14 @@
 
 <div id="milestone_infos" class="{% if milestone.public %}public{% else %}private{% endif %}">
 
-	<h1>{% trans 'Cycle actuel : ' %}{{ milestone.name }}{% if component %} - {{ component.name }}{% endif %}</h1>
+	<h1>{% trans 'Current : ' %}{{ milestone.name }}{% if component %} - {{ component.name }}{% endif %}</h1>
 	
-	<p>{% trans 'Tol&eacute;rance du cycle : ' %}<span class="max_pain_level">{{ milestone.max_pain_level }}%</span></p>
+	<p>{% trans 'Pain threshold : ' %}<span class="max_pain_level">{{ milestone.max_pain_level }}%</span></p>
 	
 	<p class="description">{% autoescape on %}{{ milestone.description }}{% endautoescape %}</p>
 	{% if milestone.public %}
-	<p class="public_text">{% trans 'Ce cycle est publique' %}</p>
+	<p class="public_text">{% trans 'This is a public milestone.' %}</p>
 	{% else %}
-	<p class="private_text">{% trans 'Ce cycle est priv&eacute;' %}</p>
+	<p class="private_text">{% trans 'This is a private milestone.' %}</p>
 	{% endif %}
 </div>

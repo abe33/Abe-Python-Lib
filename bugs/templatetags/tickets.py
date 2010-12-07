@@ -6,7 +6,7 @@ from django.contrib.auth.models import *
 from abe.bugs.views import *
 from abe.bugs.models import *
 from abe.utils import *
-from abe.bugs import settings
+from abe.bugs import settings as msettings
 
 register = Library()
 
@@ -17,7 +17,6 @@ class ComponentsListNode(BaseTemplateNode):
 def get_labels_for(model, cap=True, esc=True): 
 	labels = {} 
 	for field in model._meta.fields: 
-		print( field.name )
 		label = field.verbose_name 
 		if cap : 
 			label = capfirst(label) 
@@ -47,6 +46,26 @@ def render_ticket( ticket ):
 					'previous_ticket':ticket.previous_ticket(), 
 				}
 render_ticket = register.inclusion_tag("bugs/ticket_detail.html")(render_ticket)
+
+def render_tickets_table( tickets, user, table_id="tickets_list"):
+	return {
+					'tickets':tickets, 
+					'user':user, 
+					'table_id':table_id, 
+					'MEDIA_URL':settings.MEDIA_URL, 
+					'milestone' : MileStone.objects.get(active=True),
+				}
+render_tickets_table = register.inclusion_tag("bugs/tickets_table.html")(render_tickets_table)
+
+def render_user_tickets_table( user ):
+	return {
+					'tickets':Ticket.objects.filter( assignees__id__contains=user.id ).order_by("-pain"), 
+					'user':user, 
+					'table_id':"my_tickets", 
+					'MEDIA_URL':settings.MEDIA_URL, 
+					'milestone' : MileStone.objects.get(active=True),
+				}
+render_user_tickets_table = register.inclusion_tag("bugs/tickets_table.html")(render_user_tickets_table)
 
 def render_ticket_with_id( id ):
 	ticket = Ticket.objects.get(id=id)
@@ -84,54 +103,27 @@ def get_components_list ( parser,  token ):
 	return ComponentsListNode.handle_token( parser,  token )
 
 def pain_css (ticket):
-	"""
-	Renvoie l'ensemble des classes css indiquant l'état du ticket passé en paramètre.
-
-	Usage : ::
-
-		{% pain_css ticket %}
-		
-	Un ticket ne peut avoir que trois styles d'état simultanément parmi les style suivants :
-
-	- painX : où X est un entier allant de 0 à 100 inclus
-	- block : si le ticket est bloquant pour le cycle de développement courant
-	- affected : si le ticket à été affecter à un membre du staff
-	- done : si le ticket est fermé
-
-	À noter qu'un ticket ne peux pas être affecté et fermé en même temps. 
-
-	Exemple de style possible : ::
-
-		pain20 status0
-		pain20 status0 block
-		pain20 status0 done
-		pain20 status0 block affected
-	"""
 	css = "pain%s" % ticket.pain_as_int()
 	css += ' status%i' % ticket.status
 	
-	if( ticket.block_milestone() ):
+	if ticket.block_milestone() :
 		css += ' block'
 		
-	if( ticket.is_done() ):
+	if ticket.killer_bug :
+		css += ' killer'
+	
+	if not ticket.active :
 		css += ' done'
 	else:
-		if( ticket.is_affected() ):
+		if ticket.is_affected() :
 			css += ' affected'
+	
 	return css
 register.simple_tag( pain_css )
 
 def user_name (user):
-	"""
-	Renvoie le nom complet de l'objet User passé en paramètre, si celui-ci n'est pas vide, 
-	autrement, la fonction renvoie le login de l'utilisateur.
-
-	Usage : ::
-
-		{% user_name user %}
-	"""
 	name = ""
-	if( user.get_full_name() != "" ):
+	if user.get_full_name() != "" :
 		name = user.get_full_name()
 	else:
 		name = user.username
@@ -139,25 +131,6 @@ def user_name (user):
 register.simple_tag( user_name )
 
 def user_profil_url(user, target_user, link_title="", link_class="" ):
-	"""
-	Renvoie un lien HTML vers la page de profil de l'utilisateur en fonction des paramètres.
-	 
-	Usage : ::
-
-		{% user_profil_url user target_user link_title link_class %}
-		
-	- Le premier argument est l'utilisateur en train de visualiser la page.
-	- Le deuxième argument est l'utilisateur pour lequel on souhaite créer un lien vers le profil.
-	- Le troisième paramètre est optionnel, il s'agit de la valeur de l'attribut title du lien crée.
-	- Le quatrième paramètre est optionnel, il s'agit de la valeur de l'attribut class du lien crée.
-
-	Un lien n'est renvoyée que dans les conditions suivantes : 
-
-	- L'utilisateur en train de visualiser la page possède les droits nécessaires pour visualiser les profils utilisateurs.
-	- Le site autorise les pages de profils utilisateurs.
-
-	Si l'une de ces conditions n'est pas validée, le résutat retourné est le même qu'avec le tag user_name.
-	"""
 	anchor = ""
 	if user.is_staff:
 		anchor = "<a href='%s' title='%s' class='%s'>%s</a>" % ( "#", link_title, link_class, user_name(target_user), )
@@ -167,26 +140,11 @@ def user_profil_url(user, target_user, link_title="", link_class="" ):
 register.simple_tag( user_profil_url )
 
 def milestone_header(milestone, component=None):
-	"""
-	Inclus le template d'affichage des informations du cycle de développement
-	passé en paramètre.
-
-	Usage : ::
-
-		{% milestone_header milestone component %}
-		
-	Le template utilisé est situé à l'adresse suivante :  
-	  
-		bugreport/milestone_header.html
-	"""
 	return {
 					'milestone':milestone,
-					'component':component
+					'component':component, 
 				}
 milestone_header = register.inclusion_tag("bugs/milestone_header.html")(milestone_header)
-
-
-
 
 def print_style(color,style_name):
 	i = 0
@@ -207,21 +165,9 @@ def print_style(color,style_name):
 	return css + '\n'
 
 def print_pain_css ():
-	"""
-	Génère l'ensemble des styles css utilisés pour la représentation de la pénibilité d'un ticket.
-
-	Usage::
-
-		{% print_pain_css %}
-		
-	Ce tag est désormais déprécié. À la place il est conseillé d'ajouter la feuille de style suivante
-	dans les pages d'affichages de ticket :
-
-		bugrepot/css/pain_colors.css
-	"""
-	css = print_style( settings.PAIN_COLOR, settings.PAIN_PREFIX )
-	css += print_style( settings.PAIN_BLOCK_COLOR, settings.PAIN_PREFIX + settings.PAIN_BLOCK_PREFIX )
-	css += print_style( settings.PAIN_AFFECTED_COLOR, settings.PAIN_PREFIX  + settings.PAIN_BLOCK_PREFIX + settings.PAIN_AFFECTED_PREFIX )
-	css += print_style( settings.PAIN_DONE_COLOR, settings.PAIN_PREFIX + settings.PAIN_BLOCK_PREFIX + settings.PAIN_DONE_PREFIX )
+	css = print_style( msettings.PAIN_COLOR, msettings.PAIN_PREFIX )
+	css += print_style( msettings.PAIN_BLOCK_COLOR, msettings.PAIN_PREFIX + msettings.PAIN_BLOCK_PREFIX )
+	css += print_style( msettings.PAIN_AFFECTED_COLOR, msettings.PAIN_PREFIX  + msettings.PAIN_BLOCK_PREFIX + msettings.PAIN_AFFECTED_PREFIX )
+	css += print_style( msettings.PAIN_DONE_COLOR, msettings.PAIN_PREFIX + msettings.PAIN_BLOCK_PREFIX + msettings.PAIN_DONE_PREFIX )
 	return css
 register.simple_tag( print_pain_css )

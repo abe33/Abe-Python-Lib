@@ -11,13 +11,21 @@ from abe.missions import settings as msettings
 from abe.utils import *
 from datetime import *
 
+def is_valid_minimal_context( context ):
+	if "profile" not in context :
+		raise KeyError( _(u"The provided context don't have any entry with the key 'profile'. The profile is mandatory") )
+	if "user" not in context :
+		raise KeyError( _(u"The provided context don't have any entry with the key 'user'. The user is mandatory") )
+
 class MissionTriggerResponse( HttpResponse ):
-	def __init__(self, response, triggers,  request, *args, **kwargs):
+	def __init__(self, response, context, *args, **kwargs):
 		super(MissionTriggerResponse, self).__init__(*args,  **kwargs)
 		self.response = response
-		self.triggers = triggers
-		self.request = request
-		self.userID = request.user.id
+		
+		is_valid_minimal_context( context )
+		
+		self.context = context
+
 
 class MissionMiddleware():
 
@@ -45,46 +53,57 @@ class MissionMiddleware():
 #		n = timedelta_from_string(s)
 #		print n
 #		print n == d
+#		d1 = date(2010, 12, 12)
+#		d2 = date(2012, 12, 12)
+#		d3 = date(2013, 12, 12)
+#		dl1 = d2 - d1
+#		dl2 = d3 - d1
+#		print dl1 < dl2
 		
 		# HERE COMES THE TESTS
-#		m1 = Mission("Mission#1")
-#		m1.id = 1
-#		m1.pre_conditions = MissionConditionList()
-#		self.missions_map[ m1.id ] = m1
-#
-#		m2 = Mission( "Mission#2")
-#		m2.id = 2
-#		m2.pre_conditions = MissionConditionList( [ MissionCondition(["trigger1"]), TrueCondition(["trigger2"])] )
-#		self.missions_map[ m2.id ] = m2
-#
-#		m3 = Mission( "Mission#3")
-#		m3.id = 3
-#		m3.conditions = MissionConditionList()
-#		self.missions_map[ m3.id ] = m3
-#
-#		m4 = Mission( "Mission#4" )
-#		m4.id = 4
-#		m4.conditions = MissionConditionList( [ 
-#																	MissionCondition(["trigger1"]), 
-#																	 TrueCondition(["trigger2"]), 
-#																	 MissionRequiredCondition(triggers=["trigger3"], item=m3.id ), 
-#																	 NumericComparisonCondition(triggers=["trigger4"], value=4)
-#																	] )
-#		self.missions_map[ m4.id ] = m4
-#		
-#		m5 = Mission( "Mission#5" )
-#		m5.id = 5
-#		m5.pre_conditions = MissionConditionList( [ MissionRequiredCondition(triggers=["trigger3"], item=m3.id ) ] )
-#		self.missions_map[ m5.id ] = m5
-#		
-#		self.default_missions_elligible_data = [ m1, m2 ]
-#		self.default_missions_available_data = []
-#		self.default_missions_active_data = [ m3, m4 ]
+		m1 = Mission("Mission#1")
+		m1.id = 1
+		m1.pre_conditions = MissionConditionList()
+		self.missions_map[ m1.id ] = m1
 
-		self.default_missions_elligible_data = []
-		self.default_missions_available_data = []
-		self.default_missions_active_data = []
+		m2 = Mission( "Mission#2")
+		m2.id = 2
+		m2.pre_conditions = MissionConditionList( [ MissionCondition(["trigger1"]), TrueCondition(["trigger2"])] )
+		self.missions_map[ m2.id ] = m2
+
+		m3 = Mission( "Mission#3")
+		m3.id = 3
+		m3.conditions = MissionConditionList()
+		self.missions_map[ m3.id ] = m3
+
+		m4 = Mission( "Mission#4" )
+		m4.id = 4
+		m4.conditions = MissionConditionList( [ 
+																	 MissionCondition(["trigger1"]), 
+																	 TrueCondition(["trigger2"]), 
+																	 MissionRequiredCondition(triggers=["trigger3"], item=m3.id ), 
+																	 NumericComparisonCondition(triggers=["trigger4"], value=4)
+																	] )
+		self.missions_map[ m4.id ] = m4
 		
+		m5 = Mission( "Mission#5" )
+		m5.id = 5
+		m5.pre_conditions = MissionConditionList( [ MissionRequiredCondition(triggers=["trigger3"], item=m3.id ) ] )
+		self.missions_map[ m5.id ] = m5
+		
+		self.default_missions_elligible_data = [ m1, m2 ]
+		self.default_missions_available_data = []
+		self.default_missions_active_data = [ m3, m4 ]
+		
+#		print some_in_list( ["foo", "oof"], ["foo", "pouet",  "tata",  "mama"] )
+#		print some_in_list( ["foo"], ["oof", "pouet"] )
+#		print some_in_list( ["foo", "oof"], ["foo"] )
+#		print some_in_list( [ "foo", "oof" ], ["foo", "pouet",  "tata",  "mama", "oof" ] )
+
+#		self.default_missions_elligible_data = []
+#		self.default_missions_available_data = []
+#		self.default_missions_active_data = []
+#		
 #		# testing custom contains query on MissionConditionList
 #		print m3 in m4.conditions
 #		print m3 in m2.pre_conditions
@@ -124,9 +143,9 @@ class MissionMiddleware():
 				if mission in m.pre_conditions :
 					profile.missions_elligible.append( m )
 
-	def init_user_missions_profile(self, userID):
+	def init_user_missions_profile(self, user):
 		profile = MissionProfile()
-		profile.user = User.objects.get(id=userID)
+		profile.user = user
 #		profile.save()
 		
 		#HERE COMES THE TESTS
@@ -142,10 +161,12 @@ class MissionMiddleware():
 		if profile.missions_done is None:
 			profile.mission_done = MissionList()
 		
-		self.check_user_missions( profile )
+		self.check_user_missions( { 'profile':profile, 'user':user } )
 		return profile
 
-	def check_user_missions(self, profile, trigger = None ):
+	def check_user_missions(self, context ):
+		profile = context["profile"]
+		
 		elligibles = profile.missions_elligible
 		availables = profile.missions_available
 		actives = profile.missions_active
@@ -156,7 +177,7 @@ class MissionMiddleware():
 		to_pop = []
 		n = 0
 		for m in actives : 
-			data = m.check_completion( profile, actives.get_mission_data( m ), trigger )
+			data = m.check_completion( context, actives.get_mission_data( m ) )
 			
 			#perform changes due to completed active missions
 			# no list for the mission == no failed condition == success
@@ -192,7 +213,7 @@ class MissionMiddleware():
 		to_pop = []
 		n = 0
 		for m in elligibles :
-			data = m.check_availability( profile, elligibles.get_mission_data( m ), trigger )
+			data = m.check_availability( context, elligibles.get_mission_data( m ) )
 			
 			#perform changes due to available elligible missions
 			# no list for the mission == no failed condition == success
@@ -237,12 +258,7 @@ class MissionMiddleware():
 			response.content = response.content.replace( msettings.MISSION_NOTIFICATION_TOKEN, "")
 			return response
 		
-		try :
-			profile = MissionProfile.objects.get(user__id=response.userID) 
-		except :
-			profile = self.init_user_missions_profile( response.userID )
-		
-		print response.triggers
+		print response.context["triggers"]
 		
 		#HERE COMES THE CHECK
 #		response_data = self.check_user_missions( profile )

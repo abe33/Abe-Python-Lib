@@ -2,16 +2,22 @@
 from django.contrib.auth.models import AnonymousUser
 
 from abe.missions.middleware import MissionTriggerResponse
-from abe.missions import settings
+from abe.missions import settings as msettings
 
 def mission_triggers( *triggers ):
 	def _mission_triggers( f ):
 		def __mission_triggers( *args,  **kwargs):
 			res = f( *args,  **kwargs )
-			if isinstance( args[0].user, AnonymousUser ):
+			user = args[0].user
+			if isinstance( user, AnonymousUser ):
 				return res
 			else:
-				return MissionTriggerResponse( res, triggers, args[0] )
+				try :
+					profile = MissionProfile.objects.get(user__id=response.userID) 
+				except :
+					profile = msettings.MISSION_MIDDLEWARE_INSTANCE.init_user_missions_profile( user )
+				
+				return MissionTriggerResponse( res, {'triggers':triggers, 'profile':None, 'user':user } )
 		return __mission_triggers
 	return _mission_triggers
 
@@ -19,6 +25,6 @@ def mission_map_update( f ):
 	def _mission_map_update( *args,  **kwargs):
 		res = f( *args,  **kwargs )
 		print "mission_map_update"
-#		settings.MISSION_MIDDLEWARE_INSTANCE.update_missions_map()
+#		msettings.MISSION_MIDDLEWARE_INSTANCE.update_missions_map()
 		return res
 	return _mission_map_update

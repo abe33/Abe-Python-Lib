@@ -40,21 +40,20 @@
 		{% render_mission_notification %}
 	
 		<div id="nav">
-			<nav>{% block nav %}{% endblock %}
-			</nav>
+			<nav>{% block nav %}{% endblock %}</nav>
 		</div>
 		
 		<div id="header">
-			<header>{% block header %}{% endblock %}
-			</header>
+			<header>{% block header %}{% endblock %}</header>
 		</div>
 
+        <div id="content">
 		<div id="contentnav">
-			<nav>{% block contentnav %}{% endblock %}
-			</nav>
+			<nav>{% block content_nav %}{% endblock %}</nav>
 		</div>
-        
-        <div id="content">{% block content %}{% endblock %}
+		{% block content_header %}{% endblock %}
+		{% block content %}{% endblock %}
+		{% block content_footer %}{% endblock %}
 		</div>
 		
 		<div id="footer">
@@ -62,6 +61,5 @@
 			{% render_ajax_ticket_form request %}
 			</footer>
 		</div>
-
-	</body>
+</body>
 </html>

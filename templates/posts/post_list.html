@@ -5,7 +5,7 @@
 
 <h2>{{ page_title }}</h2>
 {% if rss_page_url %}
-<a href="{{rss_page_url}}" class="feed" title="{% trans "RSS pour la page" %} {{page_title }}"><img src="{{ MEDIA_URL }}img/feed-icon-28x28.png" alt="{% trans "RSS pour la page" %} {{page_title }}"></a>
+<a href="{{rss_page_url}}" class="feed" title="{% trans "RSS feed for this page" %} {{page_title }}"><img src="{{ MEDIA_URL }}img/feed-icon-28x28.png" alt="{% trans "RSS feed for this page" %} {{page_title }}"></a>
 {% endif %}
 <div id="menu">
 	{% render_categories_list %}
@@ -28,18 +28,18 @@
                 <h4 class="post-title">
                     <a rel="bookmark" href="{{ post.get_absolute_url }}">{{post.name}}</a>
                 </h4>
-                <span class="post-details">{% trans "Publi&eacute; dans " %}<a href="{{ post.category.get_absolute_url }}">{{post.category.name}}</a></span>
+                <span class="post-details">{% trans "Published in " %}<a href="{{ post.category.get_absolute_url }}">{{post.category.name}}</a></span>
                 {% if post.tags %}
                 <span class="post-tags">{% tags_for_object post as tag_list %}
                 {% for tag in tag_list %}{% url post_by_tag tag as tag_url %}<a href="{{tag_url}}">{{ tag }}</a>{% if not forloop.last %},&nbsp;{% endif %}{% endfor %}</span>
                 {% endif %}
 				{% get_comment_count for post as comment_count %}
-				{% if post.allow_comments %}<span class="comments">{% blocktrans count comment_count as counter %}{{ comment_count }} Commentaire{% plural %}{{ comment_count }} Commentaires{% endblocktrans %}</span>{% endif %}
+				{% if post.allow_comments %}<span class="comments">{% blocktrans count comment_count as counter %}{{ comment_count }} Comment{% plural %}{{ comment_count }} Comments{% endblocktrans %}</span>{% endif %}
 
             </div>
             <div class="post-body">
                 <div id="content{{ post.id }}">{% autoescape off%}{{post.content_or_excerpt}}{% endautoescape%}</div>
-                {% if post.has_hidden_content %}<span class="read-it"><a href="{{ post.get_absolute_url }}">{% trans "Lire la suite" %}</a></span>{% endif %}
+                {% if post.has_hidden_content %}<span class="read-it"><a href="{{ post.get_absolute_url }}">{% trans "Read more" %}</a></span>{% endif %}
             </div>
         </div>
     </article>
@@ -49,9 +49,9 @@
 
 {% if has_next_page or has_previous_page %} 
 <div class="pagination">
-{%if has_next_page %}<a href="{{next_page_url }}">{%trans "Billets plus anciens" %}</a>{% endif %}
+{%if has_next_page %}<a href="{{next_page_url }}">{%trans "Oldest posts" %}</a>{% endif %}
 {% if has_next_page and has_previous_page %}|&nbsp;{% endif %}
-{%if has_previous_page %}<a href="{{previous_page_url }}">{%trans "Billets plus r&eacute;cent" %}</a>{% endif %}
+{%if has_previous_page %}<a href="{{previous_page_url }}">{%trans "Recents posts" %}</a>{% endif %}
 </div>
 {% endif %}
 </div>

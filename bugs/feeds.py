@@ -6,7 +6,7 @@ from django.shortcuts import *
 from django.utils.translation import ugettext as _
 
 class LatestTicketsFeed(Feed):
-	title = _(u"Derniers tickets")
+	title = _(u"Latest tickets")
 	link = ""
 	description = ""
 
@@ -31,7 +31,7 @@ class LatestTicketsByComponentFeed(Feed):
 		return reverse("tickets_by_component",  args=(component.name, ))
 
 	def title (self,  component):
-		return _u( "Derniers tickets pour le composant %s" % component.name ) 
+		return _u( "Latest tickets for component %s" % component.name ) 
 
 	def get_object(self, request, component):
 		return get_object_or_404(Component, name=component)

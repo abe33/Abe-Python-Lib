@@ -1,16 +1,16 @@
 {% load i18n tickets %}
 
-<a href="#bug-submit" onclick="toggleForm();">{% trans "Signaler un bug" %}</a></input>
+<a href="#bug-submit" onclick="toggleForm();">{% trans "Report a bug" %}</a></input>
 <div id="fast_form_container" style="display:none;">
 	<div id="form_confirm" style="display:none;">
-		<h3>{% trans "Le ticket a bien &eacute;t&eacute; enregistr&eacute;" %}</h3>
+		<h3>{% trans "The ticket have been successfully registered." %}</h3>
 		<span>
-			Merci de nous aider &agrave; am&eacute;liorer la qualit&eacute; de nos logiciels.
+			Thank you for helping us to improve the quality of our products.
 			{% if request.user.is_staff %}
 				<p>
 				{%url tickets_list as tickets_url %}
-				{% blocktrans %}Vous pouvez consultez tout les tickets enregistr&eacute;s et suivre leur &eacute;volution depuis la
-				<a href="{{ tickets_url }}">Liste des Tickets</a>.
+				{% blocktrans %}You can follow the resolution of this ticket or looking at 
+				the others tickets in the <a href="{{ tickets_url }}">tickets list</a>.
 				{% endblocktrans %}
 				</p>
 			{% endif %}
@@ -62,8 +62,8 @@
 				}
 			});
 			return false;
-		}).children("p.submit").prepend($("<input type='button' value='{% trans "Annuler" %}' onclick='closeForm();'></input>"));
-		$("#fast_form_container #ticket_form legend").prepend($("<input type='button' value='{% trans "Fermer"%}' title='{% trans "Fermer"%}' onclick='closeForm();'></input>"));
+		}).children("p.submit").prepend($("<input type='button' value='{% trans "Cancel" %}' onclick='closeForm();'></input>"));
+		$("#fast_form_container #ticket_form legend").prepend($("<input type='button' value='{% trans "Close"%}' title='{% trans "Close"%}' onclick='closeForm();'></input>"));
 });
 
 -->

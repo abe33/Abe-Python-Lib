@@ -128,13 +128,13 @@ class Mission(models.Model):
 #		self.conditions = MissionConditionList()
 #		self.rewards = []
 
-	def check_availability(self, profile, past_states = None, trigger = None ):
-		return self.check_conditions( profile, self.pre_conditions, past_states, trigger )
+	def check_availability(self, context, past_states = None ):
+		return self.check_conditions( context, self.pre_conditions, past_states )
 
-	def check_completion(self, profile, past_states = None, trigger = None ):
-		return self.check_conditions( profile,  self.conditions, past_states, trigger )
+	def check_completion(self, context, past_states = None ):
+		return self.check_conditions( context, self.conditions, past_states, )
 
-	def check_conditions(self, profile, conditions, past_states = None, trigger = None ) :
+	def check_conditions(self, context, conditions, past_states = None ) :
 		if conditions is None or len( conditions ) == 0 : 
 			return {'fulfilled':True}
 
@@ -143,16 +143,16 @@ class Mission(models.Model):
 		for i, condition in enumerate( conditions ) : 
 			past_state = getattr( past_states, str(i), None )
 			if past_state is not None : 
-				if trigger is not None and trigger not in condition.triggers: 
+				if 'triggers' in context and not some_in_list( context["triggers"] , condition.triggers ): 
 					data = past_state
 				else:
-					data = self.check_condition( profile, condition, past_state, past_states )
+					data = self.check_condition( context, condition, past_state, past_states )
 			else:
-				data = self.check_condition( profile, condition, past_state, past_states )
+				data = self.check_condition( context, condition, past_state, past_states )
 			
 			datas[ str(i) ] = data
 			if getattr( data, 'fulfilled', False ):
-				fulfilled+=1
+				fulfilled += 1
 		
 		if fulfilled == len(conditions) :
 			datas["fulfilled"] = True
@@ -161,8 +161,8 @@ class Mission(models.Model):
 		
 		return datas
 
-	def check_condition( self, profile, condition, past_state, mission_data ):
-		return condition.check( profile, past_state, mission_data )
+	def check_condition( self, context, condition, past_state, mission_data ):
+		return condition.check( context, past_state, mission_data )
 
 	def __str__(self):
 		return "<Mission: %s>" % self.name
@@ -173,9 +173,9 @@ class Mission(models.Model):
 	def to_vo(self):
 		return {
 						'name':self.name , 
-						'pre_conditions':[ o.to_vo() for o in self.pre_conditions ],
-						'conditions':[ o.to_vo() for o in self.conditions ],
-						'rewards':[ o.to_vo() for o in self.rewards ],
+						'pre_conditions':[ o.to_vo() for o in self.pre_conditions ] if self.pre_conditions is not None else [],
+						'conditions':[ o.to_vo() for o in self.conditions ] if self.conditions is not None else [],
+						'rewards':[ o.to_vo() for o in self.rewards ] if self.rewards is not None else [],
 					}
 
 class MissionDescriptor(models.Model):

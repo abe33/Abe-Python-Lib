@@ -7,7 +7,7 @@
         <span class="year">{{  post.published_date|date:"Y" }}</span>
     </abbr>
     {% else %}
-    <abbr class="published">{% trans "Non publi&eacute;" %}</abbr>
+    <abbr class="published">{% trans "Not published" %}</abbr>
     {% endif %}
    </h3>
 <article id="post{{ post.id }}">
@@ -16,7 +16,7 @@
             <h4 class="post-title">
                 <a rel="bookmark" href="{{ post.get_absolute_url }}">{{post.name}}</a>
             </h4>
-            <span class="post-details">{% trans "Publi&eacute; dans " %}<a href="{{ post.category.get_absolute_url }}">{{post.category.name}}</a></span>
+            <span class="post-details">{% trans "Published in " %}<a href="{{ post.category.get_absolute_url }}">{{post.category.name}}</a></span>
             {% if post.tags %}
             <span class="post-tags">{% tags_for_object post as tag_list %}
             {% for tag in tag_list %}{% url post_by_tag tag as tag_url %}<a href="{{tag_url}}">{{ tag }}</a>{% if not forloop.last %},&nbsp;{% endif %}{% endfor %}</span>
@@ -32,6 +32,6 @@
 {% if post.allow_comments %}
 	<div id="comments-bloc">
 	{% get_comment_count for post as comment_count %}
-	<h3>{% blocktrans count comment_count as counter %}{{ comment_count }} Commentaire{% plural %}{{ comment_count }} Commentaires{% endblocktrans %}</h3>
+	<h3>{% blocktrans count comment_count as counter %}{{ comment_count }} Comment{% plural %}{{ comment_count }} Comments{% endblocktrans %}</h3>
 	{% render_comment_list for post %}</div>
 {% endif %}

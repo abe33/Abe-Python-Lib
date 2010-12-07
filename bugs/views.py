@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from django.http import *
+from django.contrib.auth.models import *
 from django.contrib.auth.decorators import *
 from django.shortcuts import *
 from django.template import RequestContext
@@ -14,6 +15,7 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.utils import simplejson as json
 from abe.bugs.models import *
 from abe.bugs import settings as mssettings
+from datetime import *
 
 
 num_ticket_per_page = "50"
@@ -27,25 +29,22 @@ class UserTicketForm(forms.ModelForm):
 class StaffTicketForm(UserTicketForm):
 	likelihood = forms.ChoiceField(	widget=forms.RadioSelect(), 
 													choices=LIKELIHOOD_CHOICES, 
-													help_text=_(u"Sélectionnez la valeur correspondant "
-																		u"au problème que vous rencontrez."),  
+													help_text=_(u"Select the value corresponding to the issue you encounter."),  
 													required=False, 
 													initial=1, 
-													label=_(u"Dans quelle proportions ce bug ce manifeste t'il ?")	)
+													label=_(u"Who will be affected by this bug?")	)
 	priority = forms.ChoiceField( widget=forms.RadioSelect(),  
 												choices=PRIORITY_CHOICES, 
-												help_text=_(u"Sélectionnez la valeur correspondant "
-																	u"au problème que vous rencontrez."), 
+												help_text=_(u"Select the value corresponding to the issue you encounter."), 
 												required=False, 
 												initial=1, 
-												label=_(u"De quel manière ce bug vous affecte t'il ?"))
+												label=_(u"How will those affected feel about the bug?"))
 	type = forms.ChoiceField( widget=forms.RadioSelect(),  
 											choices=TYPE_CHOICES, 
-											help_text=_(u"Sélectionnez la valeur correspondant "
-																u"au problème que vous rencontrez."),  
+											help_text=_(u"Select the value corresponding to the issue you encounter."),  
 											required=False, 
 											initial=1, 
-											label=_(u"De quel type de bug s'agit-il ?"))
+											label=_(u"What type of bug is this?"))
 
 	class Meta:
 		model = Ticket
@@ -73,7 +72,7 @@ def get_ticket_form( user, data=None,  instance=None ):
 def tickets_list_generic (   request, 
 										tickets_list, 
 										component=None, 
-										page_title='Page Sans titre', 
+										page_title=_(u'Untitled Page'), 
 										next_page_view="", 
 										rss_page_view="", 
 										pages_args=None, 
@@ -98,7 +97,7 @@ def tickets_list_generic (   request,
 	rss_page_url = None
 	next_page_url = None
 	previous_page_url = None
-
+	
 	if rss_page_view is not None :
 		rss_page_url = reverse( rss_page_view,  kwargs=pages_args )
 
@@ -127,6 +126,7 @@ def tickets_list_generic (   request,
 													'milestone' : MileStone.objects.get(active=True),
 													'components_list':Component.objects.all(), 
 													'component':component, 
+													'now':datetime.now(), 
 												}, 
 												RequestContext( request ) )
 
@@ -145,7 +145,7 @@ def component_tickets_list ( request, component="",  page=start_page,  num=num_t
 	return tickets_list_generic( request,  
 										   Ticket.objects.filter(active=True,  component__name=component).order_by("-pain"), 
 										   Component.objects.get(name=component), 
-										   _(u"Tickets pour le composant %s" % component), 
+										   _(u"Tickets for component %s" % component), 
 										   "tickets_by_component_archive", 
 										   "tickets_by_component_rss", 
 										   {
@@ -153,6 +153,19 @@ def component_tickets_list ( request, component="",  page=start_page,  num=num_t
 											}, 
 										   page, 
 										   num )
+
+def ticket_by_tag ( request,  tag, page=start_page,  num=num_ticket_per_page ):
+	 return tickets_list_generic(	request,  
+											Ticket.objects.filter(active=True, tags__contains=tag).order_by("-pain"), 
+											None, 
+											(u"Tickets for tag : %s") % tag , 
+											"ticket_by_tag_archive", 
+											None, 
+											{
+											'tag':tag
+											}, 
+											page, 
+											num )
 
 def ticket_detail ( request, id ):
 	try:
@@ -163,6 +176,8 @@ def ticket_detail ( request, id ):
 							   { 
 									'ticket': ticket,
 									'milestone' : MileStone.objects.get(active=True),
+									'component':None, 
+									'page_title':_(u"Ticket Details")
 								},
 							   context_instance=RequestContext(request) )
 
@@ -172,9 +187,11 @@ def ticket_affect (request, id ):
 		ticket = Ticket.objects.get(pk=id)
 	except Ticket.DoesNotExist:
 		raise Http404
-
-	ticket.assignees = request.user
+	
+	#if request.user not in ticket.assignees :
+	ticket.assignees.add( request.user )
 	ticket.save()
+	
 	return redirect( reverse("tickets_list"))
 
 def ticket_new ( request ):
@@ -214,7 +231,9 @@ def ticket_new ( request ):
 										'ticket':ticket, 
 										'milestone' : MileStone.objects.get(active=True),
 										'form': form, 
-										'ticket_url': reverse("ticket_create"),  },
+										'ticket_url': reverse("ticket_create"),  
+										'component':None,
+									},
 									context_instance=RequestContext(request))
 	else :
 		return render_to_response('bugs/ticket_edit.html', 
@@ -222,7 +241,10 @@ def ticket_new ( request ):
 									'ticket':None, 
 									'milestone' : MileStone.objects.get(active=True),
 									'form':  get_ticket_form(request.user), 
-									'ticket_url':reverse("ticket_create"), },
+									'ticket_url':reverse("ticket_create"), 
+									'component':None,
+									'page_title':_(u"New Ticket Form"), 
+								},
 								context_instance=RequestContext(request))
 
 @login_required
@@ -243,6 +265,8 @@ def ticket_edit ( request, id ):
 									'milestone' : MileStone.objects.get(active=True),
 									'form': form,
 									'ticket_url':reverse("ticket_edit", kwargs={'id':id,} ), 
+									'component':None,
+									'page_title':_(u"Edit %s") % ticket.name, 
 									},
 								  context_instance=RequestContext(request))
 		else:
@@ -253,6 +277,8 @@ def ticket_edit ( request, id ):
 									'milestone' : MileStone.objects.get(active=True),
 									'form': form,
 									'ticket_url':reverse("ticket_edit", kwargs={'id':id,} ),
+									'component':None,
+									'page_title':_(u"Edit %s") % ticket.name, 
 									}, 
 								  context_instance=RequestContext(request))
 	

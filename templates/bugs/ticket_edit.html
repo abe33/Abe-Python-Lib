@@ -1,19 +1,9 @@
-{% extends "base.html" %}
+{% extends "bugs/tickets_base.html" %}
 {% load i18n tickets %}
 
-{% block extrastyle %}
-<link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}bugs/css/pain_colors.css" />
-<link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}bugs/css/tickets_list.css" />
-<link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}bugs/css/ticket_form.css" />
+{% block toolbar %}
 {% endblock %}
 
-{% block content %}
-{% milestone_header milestone %}
-<div class="pad" id="ticket_tools">
-{% url tickets_list as list_url %}
-
-<p><a href="{{ list_url }}" >{% trans 'Tous les tickets' %}</a> |</p>
- </div>
- 
+{% block content %} 
 {% render_ticket_form request ticket %}
 {% endblock %}

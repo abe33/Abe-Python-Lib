@@ -19,6 +19,10 @@ urlpatterns = patterns('abe.bugs',
 	url (r'ticket/(?P<id>\d+)/edit/$',																'views.ticket_edit',							name="ticket_edit"),    
 	url (r'ticket/(?P<id>\d+)/affect/$',															'views.ticket_affect',						name="ticket_affect"), 
 	
+	url( r'tag/(?P<tag>[\w_-]+)/$', 																	'views.ticket_by_tag',						name="ticket_by_tag" ),
+    url( r'tag/(?P<tag>[\w_-]+)/page/(?P<page>\d+)/$', 									'views.ticket_by_tag',						name="ticket_by_tag_archive" ),
+    url( r'tag/(?P<tag>[\w_-]+)/page/(?P<page>\d+)/(?P<num>\d+)/$', 			'views.ticket_by_tag',						name="ticket_by_tag_archive_num" ),
+	
 	#AMF Gateway
 	url (r'gateway/',																								'amfgateway.tickets_gateway',			name="ticket_gateway"),
 

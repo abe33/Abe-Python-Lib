@@ -1,4 +1,4 @@
-{% load i18n tickets comments %}
+{% load i18n tickets comments tagging_tags %}
  
 {% url upain.bugreport.views.ticket_detail ticket.id as the_url %}
 
@@ -8,9 +8,16 @@
 		<dl>
 		<dt>{% trans "Description" %}</dt>
 		<dd class="description">{% autoescape off %}{{ ticket.description }}{% endautoescape %}</dd>
+		<dt>{% trans "Tags" %}</dt>
+		<dd>
+		 {% if ticket.tags %}
+                <span class="post-tags">{% tags_for_object ticket as tag_list %}
+                {% for tag in tag_list %}{% url ticket_by_tag tag as tag_url %}<a href="{{tag_url}}">{{ tag }}</a>{% if not forloop.last %},&nbsp;{% endif %}{% endfor %}</span>
+                {% endif %}
+		</dd>
 		{% if ticket.is_affected %}
 			{% if ticket.assignee_note %}
-				<dt>{% blocktrans %}Note des personnes en charge{% endblocktrans %}</dt>
+				<dt>{% blocktrans %}Assignees notes{% endblocktrans %}</dt>
 				<dd class="review">{{ ticket.assignee_note}}</dd>
 			{% endif%}
 		{% endif%}
@@ -18,10 +25,10 @@
 	</div>
 	<div class="ticket_properties">
 		<fieldset>
-		<legend>{% trans "Propri&eacute;t&eacute;es" %}</legend>
+		<legend>{% trans "Properties" %}</legend>
 		<dl class="properties">		
 			<dt>{{ labels.pain }}</dt>
-			<dd class="pain {% pain_css ticket %}">{{ ticket.pain_as_int }}%</dd>
+			<dd class="pain {% pain_css ticket %}">{{ ticket.pain|floatformat }}%</dd>
 			
 			<dt>{{ labels.type }}</dt>
 			<dd>{{ ticket.get_type_display }}</dd>
@@ -40,7 +47,7 @@
 				{% if ticket.attached_url %}
 				<a href="{{ticket.attached_url }}" rel="nofollow">{{ ticket.attached_url }}</a>
 				{% else %}
-					{% trans "Aucun" %}
+					{% trans "None" %}
 				{% endif %}
 			</dd>
 		</dl>
@@ -54,6 +61,9 @@
 			<dt>{{ labels.status }}</dt>
 			<dd>{{ ticket.get_status_display }}</dd>
 			
+			<dt>{{ labels.killer_bug }}</dt>
+			<dd>{% if ticket.killer_bug %}{% trans "Yes" %}{% else %}{% trans "No" %}{% endif %}</dd>
+			
 			<dt>{{ labels.planified_to_milestone }}</dt>
 			<dd>{{ ticket.planified_to_milestone }}</dd>
 			
@@ -65,28 +75,28 @@
 			</dl>
 		</fieldset>
 		<fieldset>
-		<legend>{% trans "&Eacute;quipe"%}</legend>
+		<legend>{% trans "Team"%}</legend>
 			<dl class="team">
-			<dt><!--{{ labels.assignees }}-->{% trans "Affectations"%}</dt>
+			<dt><!--{{ labels.assignees }}-->{% trans "Assignees"%}</dt>
 			<dd>{% if ticket.is_affected %}
 					{% for u in ticket.assignees.all %}
 						<a href="{{ u.get_absolute_url }}" class="user">{% user_name u %}</a>{% if not forloop.last %}, {% endif %}
 					{% endfor %}
 				{% else %}
-						{% trans "Aucunes" %}
+						{% trans "None" %}
 				{% endif %}</dd>
 			{% if ticket.is_affected %}
 			<dt>{{ labels.assignee_head }}</dt>
-			<dd>{% if ticket.assignee_head %}{% user_name ticket.assignee_head %}{% else %}{% trans "Aucun" %}{% endif %}</dd>
+			<dd>{% if ticket.assignee_head %}{% user_name ticket.assignee_head %}{% else %}{% trans "None" %}{% endif %}</dd>
 			{% endif %}
 			<dt>{{ labels.creation_date }}</dt>
 			<dd>
-				<span class='date'>{{ ticket.creation_date|date:"j/n/Y" }}</span>
+				<span class='date'>{{ ticket.creation_date|date:"Y-n-d" }}</span>
 				<span class='time'>{{ ticket.creation_date|date:"H:i:s" }}</span>
 			</dd>
 			<dt>{{ labels.update_date }}</dt>
 			<dd>
-				<span class='date'>{{ ticket.update_date|date:"j/n/Y" }}</span>
+				<span class='date'>{{ ticket.update_date|date:"Y-n-d" }}</span>
 				<span class='time'>{{ ticket.update_date|date:"H:i:s" }}</span>
 			</dd>
 		</dl>
@@ -95,10 +105,10 @@
 </div>
 
 {% if next_ticket or previous_ticket %} 
-<div id="ticket_pagination">
+<div id="ticket_pagination" class="toolbar">
 <ul>
-	{% if previous_ticket%}<li><a href="{% url ticket_detail previous_ticket.id %}">{% trans 'Ticket pr&eacute;c&eacute;dent : '%}{{ previous_ticket }}({{previous_ticket.pain_as_int}}%)</a></li>{% endif %}
-	{% if next_ticket%}<li><a href="{% url ticket_detail next_ticket.id %}">{% trans 'Ticket suivant : '%}{{ next_ticket }}({{next_ticket.pain_as_int}}%)</a></li>{% endif %}
+	{% if previous_ticket%}<li><a href="{% url ticket_detail previous_ticket.id %}">{% trans 'Previous ticket : '%}{{ previous_ticket }}({{previous_ticket.pain_as_int}}%)</a></li>{% endif %}
+	{% if next_ticket%}<li><a href="{% url ticket_detail next_ticket.id %}">{% trans 'Next ticket : '%}{{ next_ticket }}({{next_ticket.pain_as_int}}%)</a></li>{% endif %}
 </ul>
 </div>
 {% endif %}
@@ -106,7 +116,7 @@
 {% if ticket.allow_comments %}
 	<div id="ticket_comments">
 	{% get_comment_count for ticket as comment_count %}
-	<h3>{% blocktrans count comment_count as counter %}{{ comment_count }} Commentaire{% plural %}{{ comment_count }} Commentaires{% endblocktrans %}</h3>
+	<h3>{% blocktrans count comment_count as counter %}{{ comment_count }} Comment{% plural %}{{ comment_count }} Comments{% endblocktrans %}</h3>
 	{% render_comment_list for ticket %}</div>
 	<div id="ticket_comments_form">{% block comment_form %}{% render_comment_form for ticket %}{% endblock %}</div>
 {% endif %}

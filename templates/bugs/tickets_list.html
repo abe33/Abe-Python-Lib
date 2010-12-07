@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "bugs/tickets_base.html" %}
 {% load i18n tickets %}
 
 {% block extrastyle %}
@@ -7,93 +7,24 @@
 <link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}bugs/css/ticket_form.css" />
 {% endblock %}
 
-{% block content %}
-
-{% milestone_header milestone component %}
-
-<div id="ticket_tools">
-{% url ticket_create as new_url %}
-{% url tickets_list as list_url %}
-<ul>
-<li><a href="{{ new_url }}" class="add">{% trans 'Nouveau Ticket' %}</a></li>
+{%block toolbar%}
+<li><a href="{{ new_url }}" class="add">{% trans 'New ticket' %}</a></li>
  
 <li>{% render_components_select component %}</li>
  
  {% if component %}
- <li><a href="{{ list_url }}" >{% trans 'Tous les tickets' %}</a></li>
+ <li><a href="{{ list_url }}" >{% trans 'All tickets' %}</a></li>
 {% endif %}
+{% endblock %}
 
-</ul>
- </div>
+{%block content%}
 
-<a name="top"></a>
-<table id="tickets_list" class="pad" cellspacing="0">
-<thead>
-	<tr>
-		<th class="th_pain" title="{% trans 'P&eacute;nibilit&eacute;' %}">{% trans 'P&eacute;nibilit&eacute;' %}</th>
-		<th align="left" width="60%" class="th_name">{% trans 'Nom' %}</th>
-		<th align="left" class="th_status" title="{% trans 'Status' %}">{% trans 'Status' %}</th>
-        <th align="left" class="th_comp" title="{% trans 'Composant' %}">{% trans 'Composant' %}</th>
-		<th align="left" class="th_creator" title="{% trans 'Cr&eacute;ateur' %}">{% trans 'Cr&eacute;ateur' %}</th>
-		<th align="center" class="th_affect" title="{% trans 'Affectation' %}">{% trans 'Affectation' %}</th>
-		<th align="left" class="th_date" title="{% trans 'Date' %}">{% trans 'Date' %}</th>
-		{% if user.is_staff %}
-		<th align="center"></th>
-		{% endif %}
-	</tr>
-</thead>
-
-<tbody>
-{% for ticket in tickets_list %}
-{% url ticket_detail ticket.id as the_url %}
-	{% ifchanged ticket.block_milestone %}{% if not forloop.first %}
-	<tr class="release_limit"><td colspan="{% if user.is_staff %}8{% else %}7{% endif %}">
-		{% trans 'Tol&eacute;rance du cycle de d&eacute;veloppement : ' %}<span class="max_pain_level">{{ milestone.max_pain_level }}%</span>
-		<a href="#top" class="top" title="{% trans 'Retourner en haut de page' %}">{% trans 'Haut de page' %}</a>
-	</td></tr>
-	{% endif %}{% endifchanged %}
-	{% spaceless %}
-    <tr class="ticket {% pain_css ticket %}">
-		<td align="center">{{ ticket.pain_as_int }}%</td>
-		<td class="name"><a href="{{ the_url }}">{{ ticket.name }}</a></td>
-		<td class="status">{{ ticket.get_status_display }}</td>
-        {% if component %}
-        <td class="component">{{ ticket.component }}</td>
-		{% else %}
-         <td class="component">
-		 {% if ticket.component %}
-			<a href="{% url tickets_by_component component=ticket.component.name %}">{{ ticket.component }}</a>
-		{% else %}
-			{%trans "Aucun" %}
-		{% endif %}
-		</td>
-        {% endif %}
-        <td class="creator">{% user_name ticket.creator %}</td>
-		<td align="center" class="affectation">
-		{% if user in ticket.assignees.all  %}
-			<img src="{{ MEDIA_URL }}bugs/img/accept.png" title="{% trans 'Le ticket est affect&eacute &agrave; ' %}{% for u in ticket.assignees.all %}{% user_name u %}{% if not forloop.last %}, {% endif %}{% endfor %}"/>
-		{% else %}
-			{% if ticket.block_milestone and user.is_staff %}
-				<a href="{{ the_url }}affect" title="{% trans "M'affecter ce ticket" %}"><img src="{{ MEDIA_URL }}bugs/img/add.png" alt="{% trans "M'affecter ce ticket" %}"/></a>
-			{% endif %}
-		{% endif %}
-		</td>	
-		<td class="date">{{ ticket.creation_date|date:"j/n/Y" }}</td>
-		{% if user.is_staff %}
-			<td class="controls" align="right"><a href="{{ the_url }}edit" title="{% trans '&Eacute;diter ce ticket' %}"><img src="{{ MEDIA_URL }}bugs/img/report_edit.png" alt="{% trans "&Eacute;diter ce ticket"%}"/></a></td>
-		{% endif %}
-	</tr>
-	{% endspaceless %}
-{% endfor %}
-	<tr class="release_limit"><td colspan="{% if user.is_staff %}8{% else %}7{% endif %}">
-		<a href="#top" class="top" title="{% trans 'Retourner en haut de page' %}">{% trans 'Haut de page' %}</a>
-	</td></tr>
-</tbody></table>
+{% render_tickets_table tickets_list user "tickets_list" %}
 {% if has_next_page or has_previous_page %} 
-<div id="ticket_pagination">
+<div id="ticket_pagination" class="toolbar">
 <ul>
-{%if has_next_page %}<li><a href="{{next_page_url }}">{%trans "Billets plus anciens" %}</a></li>{% endif %}
-{%if has_previous_page %}<li><a href="{{previous_page_url }}">{%trans "Billets plus r&eacute;cent" %}</a></li>{% endif %}
+{%if has_next_page %}<li><a href="{{next_page_url }}">{%trans "Oldest tickets" %}</a></li>{% endif %}
+{%if has_previous_page %}<li><a href="{{previous_page_url }}">{%trans "Recents tickets" %}</a></li>{% endif %}
 </ul>
 </div>
 {% endif %}

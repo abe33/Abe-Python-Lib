@@ -33,7 +33,6 @@ def normalize_query(query_string,
 def get_query(query_string, search_fields):
     ''' Returns a query, that is a combination of Q objects. That combination
         aims to search keywords within a model by testing the given search fields.
-    
     '''
     query = None # Query to search for every search term        
     terms = normalize_query(query_string)
@@ -54,7 +53,7 @@ def get_query(query_string, search_fields):
 
 def post_list_generic (   request, 
 										posts_list, 
-										page_title='Page Sans titre', 
+										page_title='Untitled page', 
 										next_page_view="", 
 										rss_page_view="", 
 										pages_args=None, 
@@ -109,7 +108,7 @@ def page_not_found( request ):
 	 return render_to_response( "404.html", 
 												 {
 													'root_url':reverse("index"), 
-													'page_title':_(u'Erreur 404')
+													'page_title':_(u'404 Error')
 												}, 
 												RequestContext( request ) )
 
@@ -118,7 +117,7 @@ def post_preview ( request,  id ):
 	return render_to_response( "posts/post_details.html", 
 												{
 													'id':id, 
-													'page_title':_(u'Billet')
+													'page_title':_(u'Post')
 												}, 
 												RequestContext( request ) )
 
@@ -129,7 +128,7 @@ def post_details( request, year,  month,  day,  slug):
 																								  Q(published_date__month=month),
 																								  Q(published_date__day=day),
 																								  Q(slug=slug) ), 
-															'page_title':_(u'Billet')
+															'page_title':_(u'Post')
 														}, 
 														RequestContext( request ) )
 
@@ -146,7 +145,7 @@ def orphan_page( request, orphan_id ):
 def post_list( request, page=start_page,  num=num_post_per_page ):
 	return post_list_generic( request,  
 										   Post.objects.filter(published=True, orphan=False).order_by("-published_date"), 
-										   _(u"Actualités"), 
+										   _(u"News"), 
 										   "post_archive", 
 										   "post_rss", 
 										   {}, 
@@ -168,7 +167,7 @@ def post_by_tag ( request,  tag, page=start_page,  num=num_post_per_page ):
 def post_by_category( request,  category, page=start_page,  num=num_post_per_page ):
 	return post_list_generic( request,  
 										   Post.objects.filter(published=True, orphan=False,  category__name=category).order_by("-published_date"), 
-										   _(u"Catégorie : %s") % category , 
+										   _(u"Category : %s") % category , 
 										   "post_by_category_archive", 
 										   "post_by_category_rss", 
 										   {
@@ -180,7 +179,7 @@ def post_by_category( request,  category, page=start_page,  num=num_post_per_pag
 def post_by_year( request,  year, page=start_page,  num=num_post_per_page ):
 	return post_list_generic( request,  
 										   Post.objects.filter(published=True, orphan=False,  published_date__year=year).order_by("-published_date"), 
-										   _(u"Billet de l'année %s") % year, 
+										   _(u"Posts for year %s") % year, 
 										   "post_by_year_archive", 
 										   None, 
 										   {
@@ -192,7 +191,7 @@ def post_by_year( request,  year, page=start_page,  num=num_post_per_page ):
 def post_by_month( request,  year,  month, page=start_page,  num=num_post_per_page ):
 	return post_list_generic( request,  
 										   Post.objects.filter(published=True, orphan=False, published_date__year=year, published_date__month=month).order_by("-published_date"), 
-										   _(u"Billet du mois %s de l'année %s") % ( month, year ), 
+										   _(u"Posts for month %s of year %s") % ( month, year ), 
 										   "post_by_month_archive", 
 										   None, 
 										   {
@@ -206,7 +205,7 @@ def links_list ( request ):
 	return render_to_response( "posts/links_list.html", 
 												{
 													'links':SiteLink.objects.all(), 
-													'page_title':_(u'Liens')
+													'page_title':_(u'Links')
 												}, 
 												RequestContext( request ) )
 
@@ -245,7 +244,7 @@ def search( request ):
 
 	return post_list_generic( request,  
 										   found_entries, 
-										   _(u"Recheche : %s") % query_string, 
+										   _(u"Search : %s") % query_string, 
 										   None, 
 										   None, 
 										   {} )

@@ -15,6 +15,7 @@ from django.contrib.comments.models import Comment
 from django.core.serializers.json import DjangoJSONEncoder
 from django.utils import simplejson as json
 
+from tagging import fields
 # Le calcul de la pénibilité d'un ticket s'effectuant à partir 
 # de critères objectifs, le créateur d'un ticket est encouragé
 # à utiliser des valeurs préprogrammés pour chaque critère de
@@ -22,37 +23,37 @@ from django.utils import simplejson as json
 
 # Choix prédéfinis pour le type du problème 
 TYPE_CHOICES = (
-    (1, _(u"1 - Documentation - Un problème dans la documentation.")),
-    (2, _(u"2 - Localisation - Un problème dans la traduction.")),
-    (3, _(u"3 - Finitions graphiques ou sonores - Un problème d'esthétique.")),
-    (4, _(u"4 - Équilibrage - Provoque une déterioration dans l'efficience des stratégies prévues, amenant à une expérience dégradée.")),
-    (5, _(u"5 - Ergonomie mineure - Affecte l'ergonomie dans le cas d'un scénario secondaire.")),
-    (6, _(u"6 - Ergonomie majeure - Affecte l'ergonomie dans le cas d'un scénario clé.")),
-    (7, _(u"7 - Crash - Le problème provoque un crash ou une perte de donnée. Exception levée dans le cas d'une version de debug."))
+    (1, _(u"1 - Documentation - An issue in the documentation.")),
+    (2, _(u"2 - Localization - An issue with the localization.")),
+    (3, _(u"3 - GFX or SFX Polish - An aesthetic issue with graphics or sounds.")),
+    (4, _(u"4 - Balance - Enables degenerate usage strategies that harm the experience.")),
+    (5, _(u"5 - Minor ergonomy - Impairs usability in secondary scenarios.")),
+    (6, _(u"6 - Major ergonomy - Impairs usability in key scenarios.")),
+    (7, _(u"7 - Crash - Bug causes crash or data loss. Asserts in the Debug release."))
 )  
 # Choix prédéfinis pour la priorité du problème
 PRIORITY_CHOICES = (
-    (1, _(u"1 - Nuisance - Pas un gros problème mais est detectable. N'impacte en rien l'expérience de l'utilisateur.")),
-    (2, _(u"2 - Plaie Mineure - Affecte le bon fonctionnement d'une tache peu ordinaire.")),
-    (3, _(u"3 - Plaie Moyenne - Clairement un problème notable.")),
-    (4, _(u"4 - Plaie Majeure - Impacte de manière très importante l'expérience de l'utilisateur, rend l'usage du produit périlleux. L'équipe doit stopper toute sortie pour ce bug.")),
-    (5, _(u"5 - Critique - Bloque toute progression dans le travail quotidien.")),
+    (1, _(u"1 - Nuisance - Not a big deal but noticeable. Extremely unlikely to affect sales.")),
+    (2, _(u"2 - Minor pain - Users won’t like this once they notice it. A moderate number of users won’t buy.")),
+    (3, _(u"3 - Medium pain - A User would likely not purchase the product. Will show up in review. Clearly a noticeable issue.")),
+    (4, _(u"4 - Major pain - A User would return the product. Cannot RTM. The Team would hold the release for this bug.")),
+    (5, _(u"5 - Critical - Blocking further progress on the daily build.")),
 ) 
 # Choix prédéfinis pour la redondance du problème
 LIKELIHOOD_CHOICES = (
-    (1, _(u"1 - Affecte pour ainsi dire personne.")),
-    (2, _(u"2 - Affecte seulement quelques personnes (n<25%).")),
-    (3, _(u"3 - Affecte près de la moitié des personnes (25%>n>75%).")),
-    (4, _(u"4 - Affecte la plupart des joueurs (n>75%).")),
-    (5, _(u"5 - Affecte toutes les personnes.")),
+    (1, _(u"1 - Will affect almost no one.")),
+    (2, _(u"2 - Will only affect a few users.")),
+    (3, _(u"3 - Will affect average number of users.")),
+    (4, _(u"4 - Will affect most users.")),
+    (5, _(u"5 - Will affect all users.")),
 )
 # Status possible pour un ticket
 STATUS_CHOICES = (
-	(0, _(u"Non confirmé") ), 
-	(1, _(u"Confirmé")), 
-	(2, _(u"Ouvert") ), 
-	(3, _(u"Résolu") ), 
-	(4, _(u"Non résolvable") ), 
+	(0, _(u"Unconfirmed") ), 
+	(1, _(u"Confirmed")), 
+	(2, _(u"Open") ), 
+	(3, _(u"Solved") ), 
+	(4, _(u"Unsolvable") ), 
 )
 
 class DictField(models.TextField):
@@ -85,31 +86,28 @@ class MileStone(models.Model):
 	tout tickets dont la pénibilité excède ce niveau devra être corrigé
 	pour pouvoir considérer l'étape comme accompli
 	"""
-	name = models.CharField( _(u"Nom de l'étape"), max_length=50 )
+	name = models.CharField( _(u"Milestone name"), max_length=50 )
 
 	description = models.TextField( _(u"Description"), blank=True,
-									help_text=_(u"Le but, ici, est de noter les enjeux de l'étape, les modules à implémenter par exemple."
-														u"Une fois arrivé dans les étapes publiques il y a de fortes chances qu'il n'y ai plus grand chose"
-														u"à décrire dans cette section." ) )
+									help_text=_(u"The milestone description should notice the goal to achieve in this milestone, "
+													  u"for instance the modules to implement." ) )
 
-	max_pain_level = models.SmallIntegerField( _(u"Niveau Maximum de Pénibilité"), default=DEFAULT_MILESTONE_MAXIMUM_PAIN_LEVEL,
-											   help_text=_(u"Le principe, c'est que cette étape ne devrait pas être finie "
-																  u"tant qu'il reste des tickets dont le niveau de pénibilité est supérieur "
-																  u"à cette valeur." ) )
+	max_pain_level = models.SmallIntegerField( _(u"Pain threshold"), default=DEFAULT_MILESTONE_MAXIMUM_PAIN_LEVEL,
+											   help_text=_(u"The maximum pain level for this milestone. All tickets with a pain value above "
+																  u"that limit have to be fixed before ending the milestone." ) )
 
-	public = models.BooleanField(_(u"Publique"), default=False, 
-								 help_text=_(u"À savoir si cette étape est une étape de développement interne (itération, milestone), "
-													u"ou une étape de développement publique (release candidate, alpha, beta, version 1, 2, etc..." ) )
+	public = models.BooleanField(_(u"Public"), default=False, 
+								 help_text=_(u"Does this milestone is available to users or is it an internal milestone." ) )
 
-	active = models.BooleanField(_(u'Actif'), default=False,
-								 help_text=_(u"Indique si cette étape est l'étape en cours dans le cycle de développement. "
-													u"La méthode <i>save</i> du model a été réécrite pour empêcher que deux étape soit active "
-													u"en même temps, par contre rien n'empêche qu'aucune étape ne soit active." ) )
+	active = models.BooleanField(_(u'Active'), default=False,
+								 help_text=_(u"Define in which milestone the process is currently in. "
+													u"Only one milestone can be active at one time, if you activate a milestone, "
+													u"the latest active milestone is deactivated." ) )
 
-	creation_date = models.DateTimeField ( _(u"Date de création"), 
+	creation_date = models.DateTimeField ( _(u"Creation date"), 
 										   auto_now_add=True )
 
-	update_date = models.DateTimeField ( _(u"Date de modification"), 
+	update_date = models.DateTimeField ( _(u"Update date"), 
 										 auto_now=True )
 
 	def save(self):
@@ -144,14 +142,14 @@ class Component(models.Model):
 	Dans notre cas, on pourra considérer comme composant tout élément pour lequel on souhaite
 	avoir un suivi de bugs individualisé.
 	"""
-	name = models.CharField( _(u"Nom du composant"), max_length=50 )
+	name = models.CharField( _(u"Component name"), max_length=50 )
 	description = models.TextField( _(u"Description"), blank=True,
-									help_text="Une brève description de ce composant et de son rôle dans le programme." )
+									help_text="A short description of the component's role in the program." )
 
-	creation_date = models.DateTimeField ( _(u"Date de création"), 
+	creation_date = models.DateTimeField ( _(u"Creation date"), 
 										   auto_now_add=True )
 
-	update_date = models.DateTimeField ( _(u"Date de modification"), 
+	update_date = models.DateTimeField ( _(u"Update date"), 
 										 auto_now=True )
 
 	def __unicode__(self): 
@@ -171,137 +169,137 @@ class Ticket(models.Model):
 	est appelée pénibilité (ou pain) et est déduite à partir de critères
 	objectifs.
 	"""
-	name = models.CharField( _(u"Intitulé du Ticket"), 
+	name = models.CharField( _(u"Ticket title"), 
 											max_length=100, 
-											help_text=_(u"Essayez de donner une description la plus précise et concise possible "
-																u"de la nature du problème, tel que : <br/>"
-																u"<i>Disparition d'un sprite suite à une collision.</i><br/>"
-																u"<i>Résultats non sauvegardés en fin de partie.</i>" ) )
+											help_text=_(u"Try to give the most concise and accurate description of the bug such as : <br/>"
+																u"<i>Enemies disappear while colliding with player.</i><br/>"
+																u"<i>Results not saved at the end of the play.</i>" ) )
 
 	description = models.TextField( _(u"Description"), 
-													help_text=_(u"Une bonne description de bug se compose de quatre parties :<ol>"
-																		u"<li>La procédure permettant de reproduire le bug, si elle est connue, "
-																		u"autrement une description du contexte dans lequel le bug se produit, "
-																		u"les conditions de l'application à ce moment.</li>"
-																		u"<li> Le résultat actuel, à quoi conduit le bug.</li>"
-																		u"<li> Le résultat espéré, comment devrait se comporter l'application "
-																		u"en temps normal.</li>"
-																		u"<li> Un <a href='http://fr.wikipedia.org/wiki/Workaround' rel='nofollow'>Workaround</a>, s'il est possible d'en avoir un, et si celui-ci "
-																		u"est connu, permettant de contourner le problème.</li></ol>" ) )
+													help_text=_(u"Write here the full description of the bug. "
+																		u"A good bug description contains the following elements :<ol>"
+																		u"<li>The steps which leads to the bugs, if they are known, else " 
+																		u"a description of the context in which the bug occurs.</li>"
+																		u"<li>The bugs consequences. What does happen to the program.</li>"
+																		u"<li>The expected result. How the program should behave in normal time.</li>"
+																		u"<li>A <a href='http://en.wikipedia.org/wiki/Workaround' rel='nofollow'>Workaround</a> if it is known.</li></ol>" ) )
 
-	pain = models.FloatField( _(u"Pénibilité Utilisateur"), 
+	tags = fields.TagField(_(u"Tags"),  null=True,  blank=True,  help_text=_(u"Tags can be used to to group bugs by similarities, "
+																													u"such as <code>memory leak</code>, <code>crash</code>, "
+																													u"<code>killer</code>, etc...")) 
+
+	pain = models.FloatField( _(u"User Pain"), 
 											null=True, 
 											blank=True, 
 											editable=False )
 
-	type = models.SmallIntegerField( _(u"De quel type de bug s'agit-il ?"), 
+	type = models.SmallIntegerField( _(u"What type of bug is this?"), 
 														 choices=TYPE_CHOICES,
 														 blank=True, 
 														 null=True, 
-														 help_text=_(u"Sélectionnez la valeur correspondant "
-																			u"au problème que vous rencontrez."), 
+														 help_text=_(u"Select the value corresponding to the issue you encounter."), 
 														default=1)
 
-	priority = models.SmallIntegerField( _(u"De quel manière ce bug vous affecte t'il ?"), 
+	priority = models.SmallIntegerField( _(u"How will those affected feel about the bug?"), 
 															 choices=PRIORITY_CHOICES,
 															 blank=True, 
 															 null=True, 
-															 help_text=_(u"Sélectionnez la valeur correspondant au problème "
-																				u"que vous rencontrez."), 
+															 help_text=_(u"Select the value corresponding to the issue you encounter."), 
 															default=1)
 
-	likelihood = models.SmallIntegerField( _(u"Dans quelle proportions ce bug ce manifeste t'il ?"), 
+	likelihood = models.SmallIntegerField( _(u"Who will be affected by this bug?"), 
 																choices=LIKELIHOOD_CHOICES,
 																blank=True, 
 																null=True, 
-																help_text=_(u"Sélectionnez la valeur correspondant au problème "
-																					u"que vous rencontrez." ), 
+																help_text=_(u"Select the value corresponding to the issue you encounter." ), 
 																default=1)
 
-	active = models.BooleanField(_(u"Actif"), 
-												 default=True, 
-												 help_text=_(u"Le ticket est <i>actif</i> tant qu'il n'a pas été corrigé "
-																	u"ou jugé incorrigible.") )
+	killer_bug = models.BooleanField(_(u"Killer bug"), 
+												 default=False, 
+												 help_text=_(u"A killer bug is a bug which appears to be pretty "
+																	u"hard and risky to fix but still must be corrected. "
+																	u"The teams leaders must find a solution.") )
 
-	status = models.SmallIntegerField( _(u"Status de résolution du ticket"), 
+	active = models.BooleanField(_(u"Active"), 
+												 default=True, 
+												 help_text=_(u"A ticket is active until it's state is changed to <code>Solved</code> or <code>Unsolvable</code>.") )
+
+	status = models.SmallIntegerField( _(u"Ticket' status"), 
 															choices=STATUS_CHOICES, 
-															help_text=_(u"Le status indique à quel phase en est la résolution du ticket. "
-																				u"Si le bug n'est pas reproductible il convient de le désactiver "
-																				u"et d'indiquer son status."), 
+															help_text=_(u"The ticket' status indicates in which step the bugs is in the correction process."), 
 															default=0, 
 															blank=True)
 
 	component = models.ForeignKey ( "bugs.Component", 
-														  verbose_name= _(u"Composant"), 
+														  verbose_name= _(u"Component"), 
 														  related_name="ticket_component",
-														  help_text=_(u"Le composant concerné par ce ticket."), 
+														  help_text=_(u"The component concerned by the bug."), 
 														  blank=True, 
 														  null=True )
 
 	creator = models.ForeignKey ( "auth.User", 
-													verbose_name= _(u"Créateur"), 
+													verbose_name= _(u"Creator"), 
 													related_name="ticket_creator" )
 
 	assignees = models.ManyToManyField ( "auth.User", 
-															 verbose_name= _(u"Affectations"), 
+															 verbose_name= _(u"Assignees"), 
 															 related_name="ticket_assignees", 
 															 null=True, 
 															 blank=True,
 															 limit_choices_to={'is_superuser__exact':True}, 
-															 help_text=_(u"Le(s) utilisateur(s) prenant en charge la résolution de ce ticket.") )
+															 help_text=_(u"The users who are in charges of the bug correction.") )
 
 	assignee_head = models.ForeignKey( "auth.User", 
-															  verbose_name=_(u"Responsable"), 
+															  verbose_name=_(u"Assignee referee"), 
 															  related_name="ticket_assignee_head", 
 															  null=True, 
 															  blank=True, 
 															  limit_choices_to={'is_superuser__exact':True}, 
-															  help_text=_(u"Le responsable en charge de la gestion de la résolution de ce ticket.") )
+															  help_text=_(u"The referee for this bug.") )
 	
-	assignee_note = models.TextField( _(u"Note des personnes en charge"), 
+	assignee_note = models.TextField( _(u"Assignees notes"), 
 													blank=True,
 													null=True, 
-													help_text=_(u"Une note rédigé par la(les) personnes en charge de la résolution du ticket." ) )
+													help_text=_(u"Whatever the assignees consider worst noticing." ) )
 
 	planified_to_milestone = models.ForeignKey ( "bugs.Milestone", 
-																		 verbose_name= _(u"Planification"), 
+																		 verbose_name= _(u"Planning"), 
 																		 related_name="ticket_planified_to_milestone", 
 																		 null=True, 
 																		 blank=True,
-																		 help_text=_(u"Étape pour laquelle la résolution de "
-																							u"ce ticket est planifiée." ) )
+																		 help_text=_(u"The milestone in which the bug is planned to be fixed." ) )
 
 	closed_in_milestone = models.ForeignKey ( "bugs.Milestone", 
-																		verbose_name= _(u"Étape de fin"), 
+																		verbose_name= _(u"End"), 
 																		related_name="ticket_closed_in_milestone", 
 																		null=True, 
 																		blank=True,
-																		help_text=_(u"Étape à laquelle le ticket a été fermé." ) )
+																		help_text=_(u"The milestone in which the bug was fixed." ) )
 
-	creation_date = models.DateTimeField ( _(u"Date de création"), 
+	creation_date = models.DateTimeField ( _(u"Creation date"), 
 																 auto_now_add=True )
 
-	update_date = models.DateTimeField ( _(u"Date de modification"), 
+	update_date = models.DateTimeField ( _(u"Update date"), 
 																auto_now=True )
 
-	allow_comments = models.BooleanField(_(u"Commentable"),  
+	allow_comments = models.BooleanField(_(u"Allow comments"),  
 																 default=True, 
-																 help_text=_(u"Les utilisateurs peuvent-t'ils laisser des commentaires sur ce ticket."))
+																 help_text=_(u"Does users can comments tickets?"))
 
-	contextual_data = DictField( _(u"Données contextuelles") , 
+	contextual_data = DictField( _(u"Context") , 
 												default=None, 
 												null=True, 
 												blank=True, 
-												help_text=_(u"Un objet contenant des données supplémentaires de contexte concernant le bug.") )
+												help_text=_(u"A dict object which should contains contextual data on the bug.") )
 
-	attached_url = models.URLField( _(u"Fichier joint"), 
+	attached_url = models.URLField( _(u"External datas"), 
 														max_length=200, 
 														verify_exists=True,
 														default=None, 
 														null=True, 
 														blank=True, 
-														help_text=_(u"Un lien vers un fichier joint à ce ticket, il peut s'agir "
-																			u"par exemple d'une capture d'écran montrant les conséquences d'un bug.") )
+														help_text=_(u"A link to additionnal ressources for this ticket, such as screenshots, "
+																			u"logs, or whatever that can be usefull to fix the bug.") )
 
 	def pain_as_int (self):
 		if self.pain is not None :
@@ -338,6 +336,9 @@ class Ticket(models.Model):
 		if self.is_valid_int(self.type) and self.is_valid_int(self.priority) and self.is_valid_int(self.likelihood):
 			self.pain = self.type * self.likelihood * self.priority * 100.0 / MAX_POSSIBLE_PAIN_SCORE
 		
+		if self.status in [3, 4]:
+			self.active = False
+		
 		super(Ticket, self).save(**kwargs)
 		
 	def comments_count(self):
@@ -345,7 +346,7 @@ class Ticket(models.Model):
 			return Comment.objects.filter(object_pk=self.id,).count()
 		else :
 			return _(u"None")
-	comments_count.short_description = _(u"Commentaires")
+	comments_count.short_description = _(u"Comments")
 
 	def next_ticket(self):
 		objects = Ticket.objects.filter(active=True).order_by('-pain')
@@ -381,7 +382,7 @@ class Ticket(models.Model):
 
 	@models.permalink
 	def get_absolute_url(self):
-		return ( 'ticket_detail', (),  {'num':self.id} )
+		return ( 'ticket_detail', (),  {'id':self.id} )
 
 	def __unicode__(self): 
 		return u'%s' % self.name 

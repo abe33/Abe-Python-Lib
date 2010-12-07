@@ -4,7 +4,7 @@
 	<form action="{{ ticket_url }}" method="POST" id="ticket_form">
 			{% csrf_token %}
 	
-			<fieldset><legend>{% trans "Cr&eacute;er un ticket" %}</legend>
+			<fieldset><legend>{% trans "New ticket" %}</legend>
 				<dl>
 					<dt>{{ form.name.label }}</dt>
 					<dd>
@@ -19,14 +19,22 @@
 					{{ form.description.errors }}
 					<span class="help_text">{% autoescape off %}{{ form.description.help_text }}{% endautoescape %}</span>
 					</dd>
+					{% if user.is_superuser %}
+						<dt>{{ form.tags.label }}</dt>
+					<dd>
+					{{ form.tags }}
+					{{ form.tags.errors }}
+					<span class="help_text">{% autoescape off %}{{ form.tags.help_text }}{% endautoescape %}</span>
+					</dd>
+					{% endif %}
 				</dl>
 			</fieldset>
 			<p class="submit">
-				<input type="submit" value="{% trans "Enregistrer" %}" />
+				<input type="submit" value="{% trans "Save" %}" />
 			</p>
 			
 			{% if user.is_staff %}
-				<fieldset><legend>{% trans "Propri&eacute;t&eacute;s" %}</legend>
+				<fieldset><legend>{% trans "Properties" %}</legend>
 					<dl>
 						<dt>{{ form.type.label }}</dt>
 						<dd>
@@ -65,7 +73,7 @@
 						
 						<dt>{{ form.allow_comments.label }}</dt>
 						<dd>
-						<span class="form">{{ form.allow_comments }}<label for="id_allow_comments">{% trans "Authoriser les commentaires pour ce ticket." %}</label></span>
+						<span class="form">{{ form.allow_comments }}<label for="id_allow_comments">{% trans "Allow comments for this ticket." %}</label></span>
 						{{ form.allow_comments.errors }}
 						<span class="help_text">{% autoescape off %}{{ form.allow_comments.help_text }}{% endautoescape %}</span>
 						</dd>
@@ -77,7 +85,7 @@
 					<dl>
 						<dt>{{ form.active.label }}</dt>
 						<dd>
-						<span class="form">{{ form.active }}<label>Le ticket est actif.</label></span>
+						<span class="form">{{ form.active }}<label>Does this ticket is active?</label></span>
 						{{ form.active.errors }}
 						<span class="help_text">{% autoescape off %}{{ form.active.help_text }}{% endautoescape %}</span>
 						</dd>
@@ -86,7 +94,13 @@
 						<dd>
 						{{ form.status }}
 						{{ form.status.errors }}
-						<span class="help_text">{% autoescape off %}{{ form.assignees.help_text }}{% endautoescape %}</span>
+						<span class="help_text">{% autoescape off %}{{ form.status.help_text }}{% endautoescape %}</span>
+						</dd>
+						<dt>{{ form.killer_bug.label }}</dt>
+						<dd>
+						<span class="form">{{ form.killer_bug }}<label>Is this a killer bug?</label></span>
+						{{ form.killer_bug.errors }}
+						<span class="help_text">{% autoescape off %}{{ form.killer_bug.help_text }}{% endautoescape %}</span>
 						</dd>
 						<dt>{{ form.planified_to_milestone.label }}</dt>
 						<dd>
@@ -103,7 +117,7 @@
 					</dl>
 					
 				</fieldset>
-				<fieldset><legend>{% trans "&Eacute;quipe" %}</legend>
+				<fieldset><legend>{% trans "Team" %}</legend>
 					<dl>
 						<dt>{{ form.assignees.label }}</dt>
 						<dd>
@@ -121,7 +135,7 @@
 				</fieldset>
 				{% endif %}
 				<p class="submit">
-					<input type="submit" value="{% trans "Enregistrer" %}" />
+					<input type="submit" value="{% trans "Save" %}" />
 				</p>
 			{% endif %}
 	</form>

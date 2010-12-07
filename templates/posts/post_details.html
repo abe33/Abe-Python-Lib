@@ -3,7 +3,7 @@
 
 {% block content %}
 <h2>{{ page_title }}</h2>
-<a href="{{rss_page_url}}" class="feed" title="{% trans "RSS pour la page" %} {{page_title }}"><img src="{{ MEDIA_URL }}img/feed-icon-28x28.png" alt="{% trans "RSS pour la page" %} {{page_title }}"></a>
+<a href="{{rss_page_url}}" class="feed" title="{% trans "RSS feed for this page" %} {{page_title }}"><img src="{{ MEDIA_URL }}img/feed-icon-28x28.png" alt="{% trans "RSS feed for this page" %} {{page_title }}"></a>
 <div id="posts">
 <section>
 	{% if post.orphan %}{% render_orphan post %}

@@ -6,9 +6,9 @@ from django.core.urlresolvers import reverse
 from django.shortcuts import *
 
 class LatestPostFeed(Feed):
-	title = _(u"Derniers billets publiés")
+	title = _(u"Latest published posts")
 	link = ""
-	description = _(u"Derniers billets publiés")
+	description = _(u"Latest published posts")
 
 	def link(self):
 		return reverse("index")
@@ -34,7 +34,7 @@ class LatestPostByCategoryFeed(Feed):
 		return Post.objects.filter(published=True,  category__name=cat.name).order_by('-published_date')[:10]
 
 	def title(self,  cat ):
-		return _(u"Derniers billets dans la catégorie %s" % cat.name)
+		return _(u"Latest published posts in category %s" % cat.name)
 
 	def link(self, cat ):
 		return reverse("post_by_category",  kwargs={'category':cat.name})
@@ -51,7 +51,7 @@ class LatestPostByTagFeed(Feed):
 	description = ""
 
 	def title(self,  tag ):
-		return _(u"Derniers billets dans avec le tag %s" % tag)
+		return _(u"Latest published posts with tag %s" % tag)
 
 	def get_object(self, request, tag):
 		return tag
