@@ -141,7 +141,6 @@ def orphan_page( request, orphan_id ):
 												}, 
 												RequestContext( request ) )
 
-@mission_triggers('trigger1')
 def post_list( request, page=start_page,  num=num_post_per_page ):
 	return post_list_generic( request,  
 										   Post.objects.filter(published=True, orphan=False).order_by("-published_date"), 

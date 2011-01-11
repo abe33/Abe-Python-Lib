@@ -11,6 +11,9 @@ from abe.missions import settings as msettings
 from abe.utils import *
 from datetime import *
 
+import pprint
+pp = pprint.PrettyPrinter(indent=4)
+
 def is_valid_minimal_context( context ):
 	if "profile" not in context :
 		raise KeyError( _(u"The provided context don't have any entry with the key 'profile'. The profile is mandatory") )
@@ -25,7 +28,6 @@ class MissionTriggerResponse( HttpResponse ):
 		is_valid_minimal_context( context )
 		
 		self.context = context
-
 
 class MissionMiddleware():
 
@@ -61,22 +63,22 @@ class MissionMiddleware():
 #		print dl1 < dl2
 		
 		# HERE COMES THE TESTS
-		m1 = Mission("Mission#1")
+		m1 = Mission( name="Mission#1")
 		m1.id = 1
 		m1.pre_conditions = MissionConditionList()
 		self.missions_map[ m1.id ] = m1
 
-		m2 = Mission( "Mission#2")
+		m2 = Mission( name="Mission#2")
 		m2.id = 2
 		m2.pre_conditions = MissionConditionList( [ MissionCondition(["trigger1"]), TrueCondition(["trigger2"])] )
 		self.missions_map[ m2.id ] = m2
 
-		m3 = Mission( "Mission#3")
+		m3 = Mission( name="Mission#3")
 		m3.id = 3
 		m3.conditions = MissionConditionList()
 		self.missions_map[ m3.id ] = m3
 
-		m4 = Mission( "Mission#4" )
+		m4 = Mission( name="Mission#4" )
 		m4.id = 4
 		m4.conditions = MissionConditionList( [ 
 																	 MissionCondition(["trigger1"]), 
@@ -84,16 +86,28 @@ class MissionMiddleware():
 																	 MissionRequiredCondition(triggers=["trigger3"], item=m3.id ), 
 																	 NumericComparisonCondition(triggers=["trigger4"], value=4)
 																	] )
+		m4.validity_conditions = MissionConditionList( [ TimeBombCondition ( triggers=["trigger5"] ) ] )
 		self.missions_map[ m4.id ] = m4
 		
-		m5 = Mission( "Mission#5" )
+		m5 = Mission( name="Mission#5" )
 		m5.id = 5
 		m5.pre_conditions = MissionConditionList( [ MissionRequiredCondition(triggers=["trigger3"], item=m3.id ) ] )
 		self.missions_map[ m5.id ] = m5
-		
+
 		self.default_missions_elligible_data = [ m1, m2 ]
 		self.default_missions_available_data = []
 		self.default_missions_active_data = [ m3, m4 ]
+		
+#		print m5.get_descriptor()
+#		print m5.pre_conditions[0].get_descriptor()
+#		
+#		o = instance_from_type( { 'type':"abe.missions.conditions.MissionRequiredCondition", 
+#													'item':1
+#												 } )
+#		print o
+#		print o.item
+		
+#		o = instance_from_type( {'type':"abe.missions.conditions.TimeBombCondition"})
 		
 #		print some_in_list( ["foo", "oof"], ["foo", "pouet",  "tata",  "mama"] )
 #		print some_in_list( ["foo"], ["oof", "pouet"] )
@@ -171,39 +185,47 @@ class MissionMiddleware():
 		availables = profile.missions_available
 		actives = profile.missions_active
 		dones = profile.missions_done
-		response_data = {'available':[], 'elligible':[], 'active':[], 'done':[] }
+		response_data = {'available':[], 'elligible':[], 'active':[], 'done':[], 'deactivated':[] }
 
 		#check active missions
 		to_pop = []
 		n = 0
-		for m in actives : 
-			data = m.check_completion( context, actives.get_mission_data( m ) )
-			
-			#perform changes due to completed active missions
-			# no list for the mission == no failed condition == success
-			if data["fulfilled"] : 
+		for m in actives :
+			#first we check for the validity conditions of  the actives missions
+			mission_data = actives.get_mission_data( m )
+			validity = m.check_validity( context, mission_data )
+			if validity["fulfilled"] :
 				to_pop.append( n )
-				dones.append( m )
-				response_data['done'].append( m )
-				self.update_user_elligible_missions( profile, m )
+				elligibles.append( m )
+				response_data['deactivated'].append( m )
 			else:
-				q = 0
-				for k, r in data.items() :
-					if k == 'fulfilled':
-						q-=1
-						continue
-					
-					condition = m.conditions[q]
-					# no dict for the condition == success
-					if r["fulfilled"] : 
-						# already true, no change
-						if getattr ( actives.get_mission_data( m, str(k) ), "fulfilled", False ) :
-							continue
-
-						response_data['active'].append( ( m, condition, data[k] ) )
-					q+=1
+				data = m.check_completion( context, mission_data )
 				
-			actives.set_mission_data( m, data )
+				#perform changes due to completed active missions
+				# no list for the mission == no failed condition == success
+				if data["fulfilled"] : 
+					to_pop.append( n )
+					dones.append( m )
+					response_data['done'].append( m )
+					self.update_user_elligible_missions( profile, m )
+				else:
+					q = 0
+					for k, r in data.items() :
+						if k == 'fulfilled':
+							q-=1
+							continue
+						
+						condition = m.conditions[q]
+						# no dict for the condition == success
+						if r["fulfilled"] : 
+							# already true, no change
+							if getattr ( actives.get_mission_data( m, str(k) ), "fulfilled", False ) :
+								continue
+
+							response_data['active'].append( ( m, condition, data[k] ) )
+						q+=1
+					
+				actives.set_mission_data( m, data )
 			n+=1
 		
 		for n in to_pop :
@@ -212,6 +234,25 @@ class MissionMiddleware():
 		#check elligible missions 
 		to_pop = []
 		n = 0
+		
+		for m in availables :
+			#we check for the validity conditions of  the available missions
+			#an available mission can be deactivated as well
+			mission_data = availables.get_mission_data( m )
+			validity = m.check_validity( context, mission_data )
+			if validity["fulfilled"] :
+				to_pop.append( n )
+				elligibles.append( m )
+				response_data['deactivated'].append( m )
+			n+=1
+		
+		for n in to_pop :
+			availables.pop( n )
+		
+		#check elligible missions 
+		to_pop = []
+		n = 0
+	
 		for m in elligibles :
 			data = m.check_availability( context, elligibles.get_mission_data( m ) )
 			
@@ -242,8 +283,6 @@ class MissionMiddleware():
 
 		#save 
 #		profile.save()
-		import pprint
-		pp = pprint.PrettyPrinter(indent=4)
 		pp.pprint(response_data)
 		return response_data
 

@@ -8,7 +8,7 @@ from datetime import datetime
 
 from abe.missions.conditions import *
 from abe.missions.rewards import *
-from abe.missions import settings
+from abe.missions import settings as msettings
 from abe.utils import get_class
 from abe.utils import get_classpath
 
@@ -59,17 +59,17 @@ class MissionConditionsListField(models.Field):
 		elif not isinstance( value, basestring ):
 			return value
 		
-		condition_list = value.split( settings.OBJECTS_LIST_SEPARATOR[:1] )
+		condition_list = value.split( msettings.OBJECTS_LIST_SEPARATOR[:1] )
 		return MissionConditionList([ self.get_condition( s ) for s in condition_list ])
 
 	def get_prep_value(self, value):
 		if value is None :
 			return ""
 		else:
-			return settings.OBJECTS_LIST_SEPARATOR[:1].join( [o.get_prep_value() for o in value] )
+			return msettings.OBJECTS_LIST_SEPARATOR[:1].join( [o.get_prep_value() for o in value] )
 
 	def get_condition(self, value ):
-		res = settings.OBJECTS_TYPE_RE.search( value )
+		res = msettings.OBJECTS_TYPE_RE.search( value )
 		cls = get_class( res.group(3), res.group(2) )
 		value = value.replace( res.group(0), "" )
 		return cls.to_python( value )
@@ -92,23 +92,24 @@ class MissionRewardsListField(models.Field):
 		elif not isinstance( value, basestring ):
 			return value
 		
-		rewards_list = value.split( settings.OBJECTS_LIST_SEPARATOR[:1] )
+		rewards_list = value.split( msettings.OBJECTS_LIST_SEPARATOR[:1] )
 		return [ self.get_reward( s ) for s in rewards_list ]
 
 	def get_prep_value(self, value):
 		if value is None :
 			return ""
 		else:
-			return settings.OBJECTS_LIST_SEPARATOR[:1].join( [o.get_prep_value() for o in value] )
+			return msettings.OBJECTS_LIST_SEPARATOR[:1].join( [o.get_prep_value() for o in value] )
 
 	def get_condition(self,  value ):
-		res = settings.OBJECTS_TYPE_RE.search( value )
+		res = msettings.OBJECTS_TYPE_RE.search( value )
 		cls = get_class( res.group(3), res.group(2) )
 		value = value.replace( res.group(0), "" )
 		return cls.to_python( value )
 
 class Mission(models.Model):
 	name = models.CharField(_(u"Name"),  max_length=50)
+	active = models.BooleanField(_(u"Active"), default=False )
 
 	pre_conditions = MissionConditionsListField( _(u"Access Conditions"), blank=True, default="", 
 																		help_text=_(u"A list of conditions the user have "
@@ -118,21 +119,29 @@ class Mission(models.Model):
 																 help_text=_(u"A list of conditions the user have to fulfill "
 																					u"to complete this mission and get the rewards."))
 
+	validity_conditions = MissionConditionsListField(_(u"Validity Conditions"),  blank=True,  default="", 
+																			 help_text=_(u"A list of conditions which made the mission "
+																								u"unavailable to a user if fulfilled. "
+																								u"You can use these conditions in order to build "
+																								u"temporary missions, like a mission which can be "
+																								u"only fulfilled on a specific date."))
+
 	rewards = MissionRewardsListField(_(u"Mission Rewards"), blank=True, default="", 
 														  help_text=_(u"A list of rewards the user gets "
 																			 u"when he complete the mission."))
 
-#	def __init__(self,  name="Untitled Mission" ):
-#		self.name = name
-#		self.pre_conditions = MissionConditionList()
-#		self.conditions = MissionConditionList()
-#		self.rewards = []
+	def __init__(self, *args, **kwargs ):
+		super(Mission, self ).__init__(*args, **kwargs)
+		self.descriptor = None
 
 	def check_availability(self, context, past_states = None ):
 		return self.check_conditions( context, self.pre_conditions, past_states )
 
 	def check_completion(self, context, past_states = None ):
 		return self.check_conditions( context, self.conditions, past_states, )
+
+	def check_validity(self, context, past_states = None ):
+		return self.check_conditions( context, self.validity_conditions, past_states, )
 
 	def check_conditions(self, context, conditions, past_states = None ) :
 		if conditions is None or len( conditions ) == 0 : 
@@ -175,14 +184,48 @@ class Mission(models.Model):
 						'name':self.name , 
 						'pre_conditions':[ o.to_vo() for o in self.pre_conditions ] if self.pre_conditions is not None else [],
 						'conditions':[ o.to_vo() for o in self.conditions ] if self.conditions is not None else [],
+						'validity_conditions':[ o.to_vo() for o in self.validity_conditions ] if self.validity_conditions is not None else [],
 						'rewards':[ o.to_vo() for o in self.rewards ] if self.rewards is not None else [],
 					}
+	
+	def get_descriptor(self):
+		if self.descriptor is None : 
+			cls_path = msettings.MISSION_DESCRIPTOR_CLASS
+			if cls_path is not None :
+				try:
+					cls = get_class_with_path( cls_path )
+					res = cls.objects.get( mission__id=self.id )
+					if res is None : 
+						self.descriptor = {}
+					else : 
+						self.descriptor = res
+				except:
+					self.descriptor = {}
+			else:
+				self.descriptor = {}
+			
+		return self.descriptor
+	
+	def get_condition_descriptor(self, condition):
+		
+		if self.descriptor is not None and "conditions" in self.descriptor : 
+			if condition in self.descriptor["conditions"]:
+				return self.descriptor["conditions"][condition]
+		
+		return condition.get_descriptor()
 
 class MissionDescriptor(models.Model):
-	description = models.TextField(_(u"Mission Description"), blank=True, default="")
+	mission = models.ForeignKey( Mission, verbose_name=_(u"Mission"), related_name="mission_descriptor_mission")
+	description = models.TextField(_(u"Mission Description"), 
+													blank=True, 
+													default="", 
+													help_text=_(u"The description the user will see about the corresponding mission, "
+																	   u"the description should include a briefing about what the user can "
+																	   u"do to fulfill the mission using the gameplay terminology."))
 	
 	fields = (
 					('description', 'String'), 
+					('mission', 'Mission'), 
 				)
 	
 	def to_type(self):
@@ -200,7 +243,6 @@ class MissionList(list):
 		self.init_missions_data()
 
 	def __setitem__(self, key, value):
-		print "set item %s, %s, %s" % (self, key, value)
 		if key >= self.__len__() or key < 0 :
 			raise IndexError(_(u"Index out of bounds : %s in range 0-%s") % ( key, self.__len__() - 1 ) )
 
@@ -270,11 +312,11 @@ class MissionsListField( models.Field):
 		elif not isinstance( value, basestring ):
 			return value
 		
-		missions_list = value.split( settings.OBJECTS_LIST_SEPARATOR[:1] )
+		missions_list = value.split( msettings.OBJECTS_LIST_SEPARATOR[:1] )
 
 		l = MissionList()
 		for s in missions_list :
-			mission_id = settings.OBJECTS_TYPE_RE.search(s).group(0)
+			mission_id = msettings.OBJECTS_TYPE_RE.search(s).group(0)
 			m = self.get_mission( mission_id ) 
 			s = s.replace( mission_id, "", 1)
 			data = json.loads(s)
@@ -285,13 +327,13 @@ class MissionsListField( models.Field):
 	def get_prep_value(self, value):
 		if value is None :
 			return ""
-		return settings.OBJECTS_LIST_SEPARATOR[:1].join( [ self.get_string( o, value ) for o in value] )
+		return msettings.OBJECTS_LIST_SEPARATOR[:1].join( [ self.get_string( o, value ) for o in value] )
 
 	def get_string(self, o, missions ):
 		return "%s%s" % ( str( o.id ), json.dumps( missions.get_mission_data( o ),  cls=DjangoJSONEncoder ) )
 
 	def get_mission( self, value ):
-		return settings.MISSION_MIDDLEWARE_INSTANCE.missions_map[ int(value) ]
+		return msettings.MISSION_MIDDLEWARE_INSTANCE.missions_map[ int(value) ]
 
 class MissionProfile(models.Model):
 	# l'utilisateur cible

@@ -36,6 +36,22 @@ class TagFilterSpec(FilterSpec):
 
 FilterSpec.filter_specs.insert(0, (lambda f: isinstance(f, TagField), TagFilterSpec))
 
+def instance_from_type( type ):
+	if 'type' in type :
+		a = type['type'].split( "." )
+		cls = get_class( "".join(a[-1:]), ".".join(a[:-1]))
+		print cls
+		
+		del type['type']
+		print type
+		
+		o = cls( **type )
+		print( o )
+		
+		return o
+	else:
+		raise _(u"Can't find any attributes named 'type' in %s") % str( type ) 
+
 def get_class( name, path=None ):
 	if path is None or len(path)==0:
 		exec "import %s as class_alias" % name

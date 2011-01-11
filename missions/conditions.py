@@ -10,7 +10,6 @@ from datetime import *
 
 import operator
 
-
 class MissionConditionMetaClass(type):
 
 	def to_python( cls, value):
@@ -34,7 +33,7 @@ class MissionCondition():
 	def get_prep_value(self):
 		data = self.get_prep_value_args()
 		cls =type(self)
-		return "%s.%s%s" % ( cls.__dict__["__module__"], cls.__name__, json.dumps( data,  cls=DjangoJSONEncoder )  )
+		return "%s.%s%s" % ( cls.__dict__["__module__"], cls.__name__, json.dumps( data,  cls=DjangoJSONEncoder ) )
 
 	def get_prep_value_args(self):
 		return {'triggers' : self.triggers, 
@@ -46,16 +45,20 @@ class MissionCondition():
 						'reason':_(u"MissionCondition is a base class and is always unfulfilled. Extend it to create a real condition."),  
 					}
 
+	def get_descriptor(self):
+		return {'description':_("MissionCondition is a base condition that concret ones extends.")}
+
 	def to_type(self):
 		t = {}
 		cls = type(self)
 		l = cls.fields
-		print l 
 		for i in l :
 			t [ i [ 0 ] ] = i [ 1 ]
 		
 		t["type"] = get_classpath(type(self))
 		t["help"] = cls.__doc__
+		if cls is not MissionCondition :
+			t["extends"] = "abe.missions.conditions.MissionCondition"
 		return t
 	
 	def to_vo(self):
@@ -230,7 +233,7 @@ class DateCondition(MissionCondition):
 	class TimeBombCondition( conditions.DateCondition ):
 		def __init__(self, date=date.today(), **kwargs ):
 			super( TimeBombCondition, self ).__init__( **kwargs )
-			self.date = date
+			self.date = date_from_string(date)
 		
 		def get_test_date( profile, past_state, mission_data ):
 			return self.date
@@ -240,15 +243,12 @@ class DateCondition(MissionCondition):
 	
 	condition = TimeBombCondition( date( 2012, 12, 12 ), "<" )
 	"""
-	
 	fields = (
 					('triggers', 'Array', ),
 					('hidden', 'Boolean', ),
-					('date', 'Date', ), 
 					('comparison', 'String(==,!=,<,<=,>,>=)', ) ,
 				)
-	def __init__(self, date=date.today(), comparison="==", **kwargs ):
-		self.date = date_from_string( date )
+	def __init__(self, comparison="==", **kwargs ):
 		self.comparison = comparison
 
 	def ckeck( self, context, past_state, mission_data ):
@@ -310,7 +310,7 @@ class MissionRequiredCondition(ItemInListCondition):
 	fields = (
 					('triggers', 'Array'),
 					('hidden', 'Boolean'),
-					('item', 'Mission', ) ,
+					('item', 'abe.missions.models.Mission', ) ,
 				)
 
 	def get_list(self, context, past_state, mission_data ):
@@ -335,3 +335,19 @@ class MissionStartedSinceCondition(TimeDeltaCondition):
 	def get_date(self, context, past_state, mission_data ):
 		return datetime_from_string( mission_data.added )
 
+class TimeBombCondition( DateCondition ):
+	"""A condition which check the current day against a predefined date
+		using the specified comparison operator.
+	"""
+	fields = (
+					('triggers', 'Array', ),
+					('hidden', 'Boolean', ),
+					('date', 'Date', ), 
+					('comparison', 'String(==,!=,<,<=,>,>=)', ) ,
+				)
+	def __init__(self, date=date.today(), **kwargs ):
+		super( TimeBombCondition, self ).__init__( **kwargs )
+		self.date = date_from_string(date)
+	
+	def get_test_date( context, past_state, mission_data ):
+		return self.date

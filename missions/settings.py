@@ -14,6 +14,7 @@ MISSION_MIDDLEWARE_INSTANCE=  None
 MISSION_DESCRIPTOR_CLASS = getattr( settings, "MISSION_DESCRIPTOR_CLASS", "abe.missions.models.MissionDescriptor" )
 
 MISSION_CONDITIONS_LIST = getattr( settings, "MISSION_CONDITIONS_LIST", (
+																														 "abe.missions.conditions.MissionCondition",
 																														 "abe.missions.conditions.MissionRequiredCondition",
 																														 "abe.missions.conditions.MissionsDoneCountCondition",
 																														 "abe.missions.conditions.MissionStartedSinceCondition", 
