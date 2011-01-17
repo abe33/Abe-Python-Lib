@@ -8,7 +8,19 @@ div#fast_form_container {
 	-webkit-box-shadow:1px 1px 6px #666;
 	border-radius:12px;
 	background:#efefef;
+	font-size:1em;
 }
+
+
+div#fast_form_container dl, 
+div#fast_form_container dd, 
+div#fast_form_container dt,
+div#fast_form_container form,
+div#fast_form_container p {
+	margin:0px;
+	padding:0px;
+}
+
 div#fast_form_container div#ticket_form_div {
 	background:none;
 	padding-top:0px;

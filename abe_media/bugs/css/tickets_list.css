@@ -1,6 +1,8 @@
+
 /*
  * Simple style
  */
+
 .date, .time, .user, .affect, .add {
 	padding-left:18px !important;
 	background-repeat:no-repeat;
