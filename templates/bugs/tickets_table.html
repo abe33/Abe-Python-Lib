@@ -39,10 +39,10 @@
 		{% endif %}
 		</td>
         {% endif %}
-        <td class="creator">{% user_name ticket.creator %}</td>
+        <td class="creator">{% ticket_user_name ticket.creator %}</td>
 		<td align="center" class="affectation">
 		{% if user in ticket.assignees.all  %}
-			<img src="{{ MEDIA_URL }}bugs/img/accept.png" title="{% trans 'The ticket is affected to ' %}{% for u in ticket.assignees.all %}{% user_name u %}{% if not forloop.last %}, {% endif %}{% endfor %}"/>
+			<img src="{{ MEDIA_URL }}bugs/img/accept.png" title="{% trans 'The ticket is affected to ' %}{% for u in ticket.assignees.all %}{% ticket_user_name u %}{% if not forloop.last %}, {% endif %}{% endfor %}"/>
 		{% else %}
 			{% if ticket.block_milestone and user.is_staff %}
 				<a href="{{ the_url }}affect" title="{% trans "Assign me this ticket" %}"><img src="{{ MEDIA_URL }}bugs/img/add.png" alt="{% trans "Assign me this ticket" %}"/></a>

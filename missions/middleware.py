@@ -1,26 +1,83 @@
 # -*- coding: utf-8 -*-
 from django.http import HttpResponse
-from django.contrib.auth.models import User
 
+from django.contrib.auth.models import User, AnonymousUser
+
+from abe.missions import settings as msettings
+from abe.utils import *
 from abe.missions.models import *
 from abe.missions.conditions import *
 from abe.missions.rewards import *
 
-from abe.missions import settings as msettings
-
-from abe.utils import *
 from datetime import *
 
 import pprint
+
 pp = pprint.PrettyPrinter(indent=4)
 
+def get_user_mission_profile( user ):
+	try :
+		profile = MissionProfile.objects.get(user=user) 
+	except :
+		profile = msettings.MISSION_MIDDLEWARE_INSTANCE.init_user_missions_profile( {'user':user } )
+	return profile
+
 def is_valid_minimal_context( context ):
+	"""Verify that a context dict is wellformed and raise errors if it's not the case."""
 	if "profile" not in context :
 		raise KeyError( _(u"The provided context don't have any entry with the key 'profile'. The profile is mandatory") )
-	if "user" not in context :
+	elif "user" not in context :
 		raise KeyError( _(u"The provided context don't have any entry with the key 'user'. The user is mandatory") )
+	elif not isinstance( context["profile"], MissionProfile ) :
+		raise ValueError( _(u"The provided profile is not an instance of the MissionProfile model.") )
+	elif isinstance( context["user"],  AnonymousUser ):
+		raise ValueError( _(u"The user in the context object must be a valid User, not an AnonymousUser.") )
+
+def default_mission_results_processor( profile, results ):
+	""" This function is used to handle the results of the missions check. By default 
+	this function look for completed missions and then call the affect_reward on each
+	rewards of each missions.
+	"""
+	for m in results["done"]:
+		if m.rewards is not None :  
+			for r in m.rewards :
+				r.affect_reward()
+
+def default_mission_response_processor( request, response, response_data ):
+	"""Handle the process of notifying the missions changes in the view response. A
+	token can be inserted in your template and then replace it by the concret notification
+	when changes occurs.
+	"""
+	response.response.content = response.response.content.replace( msettings.MISSION_NOTIFICATION_TOKEN, str( response_data ) )
+
+def default_mission_context_processor( user ):
+	"""Default context processor for the mission middleware checking context.
+	A minimal context must contains a user and profile fields with respectively
+	the target user and its associated MissionProfile.
+	"""
+	profile = get_user_mission_profile( user )
+	return {'user': user,  'profile':profile }
+
+def activate_mission( user, mission ):
+	processor = get_definition_with_path( msettings.MISSION_CONTEXT_PROCESSOR )
+	context = processor( user )
+	profile = context["profile"]
+
+	if mission in profile.missions_available : 
+		profile.missions_available.pop( profile.missions_available.index( mission ) )
+		profile.missions_active.append(mission)
+		msettings.MISSION_MIDDLEWARE_INSTANCE.check_user_missions ( context )
+	else : 
+		raise ValueError(_("You cannot activate a mission which is not in the available missions list."))
+	pass
 
 class MissionTriggerResponse( HttpResponse ):
+	""" The MissionTriggerResponse is used as a wrapper for
+	response from views decorated with the @mission_triggers
+	decorator.
+	The MissionTriggerResponse contains the normal view response
+	and a context dict to use in the conditions check.
+	"""
 	def __init__(self, response, context, *args, **kwargs):
 		super(MissionTriggerResponse, self).__init__(*args,  **kwargs)
 		self.response = response
@@ -30,137 +87,78 @@ class MissionTriggerResponse( HttpResponse ):
 		self.context = context
 
 class MissionMiddleware():
+	""" The MissionMiddleware class handle the per user checks for missions conditions.
+	Active missions are retreived during the middleware initialization and then used to
+	construct the default availables missions list.
+	Missions and conditions are checked after the process of a view decorated with the
+	@mission_triggers decorator. Only conditions with triggers matching the decorator
+	arguments are checked after the view process. It ensure that there's no useless
+	test during the check.
+	
+	The middleware instance is accessible using the abe.missions.settings.MISSION_MIDDLEWARE_INSTANCE
+	property. It allow the AMF gateway services to update and work with the middleware.
+	"""
+	default_missions_elligible_data = []
+	default_missions_available_data = []
+	default_missions_active_data = []
 
 	def __init__(self):
 		# setup the instance holder
+		self.default_missions_elligible_data = []
+		self.default_missions_available_data = []
+		self.default_missions_active_data = []
+		
 		msettings.MISSION_MIDDLEWARE_INSTANCE= self
 		self.missions_map = {}
 		self.update_missions_map()
-		
-#		d = date.today()
-#		print d
-#		s = str(d)
-#		n = date_from_string(s)
-#		print n
-#		print n==d
-#		n = datetime.now()
-#		s = str(n)
-#		print s
-#		d= datetime_from_string(s)
-#		print d
-#		print n == d
-#		d =  timedelta(1, 1)
-#		print d
-#		s = str(d)
-#		n = timedelta_from_string(s)
-#		print n
-#		print n == d
-#		d1 = date(2010, 12, 12)
-#		d2 = date(2012, 12, 12)
-#		d3 = date(2013, 12, 12)
-#		dl1 = d2 - d1
-#		dl2 = d3 - d1
-#		print dl1 < dl2
-		
-		# HERE COMES THE TESTS
-		m1 = Mission( name="Mission#1")
-		m1.id = 1
-		m1.pre_conditions = MissionConditionList()
-		self.missions_map[ m1.id ] = m1
-
-		m2 = Mission( name="Mission#2")
-		m2.id = 2
-		m2.pre_conditions = MissionConditionList( [ MissionCondition(["trigger1"]), TrueCondition(["trigger2"])] )
-		self.missions_map[ m2.id ] = m2
-
-		m3 = Mission( name="Mission#3")
-		m3.id = 3
-		m3.conditions = MissionConditionList()
-		self.missions_map[ m3.id ] = m3
-
-		m4 = Mission( name="Mission#4" )
-		m4.id = 4
-		m4.conditions = MissionConditionList( [ 
-																	 MissionCondition(["trigger1"]), 
-																	 TrueCondition(["trigger2"]), 
-																	 MissionRequiredCondition(triggers=["trigger3"], item=m3.id ), 
-																	 NumericComparisonCondition(triggers=["trigger4"], value=4)
-																	] )
-		m4.validity_conditions = MissionConditionList( [ TimeBombCondition ( triggers=["trigger5"] ) ] )
-		self.missions_map[ m4.id ] = m4
-		
-		m5 = Mission( name="Mission#5" )
-		m5.id = 5
-		m5.pre_conditions = MissionConditionList( [ MissionRequiredCondition(triggers=["trigger3"], item=m3.id ) ] )
-		self.missions_map[ m5.id ] = m5
-
-		self.default_missions_elligible_data = [ m1, m2 ]
-		self.default_missions_available_data = []
-		self.default_missions_active_data = [ m3, m4 ]
-		
-#		print m5.get_descriptor()
-#		print m5.pre_conditions[0].get_descriptor()
-#		
-#		o = instance_from_type( { 'type':"abe.missions.conditions.MissionRequiredCondition", 
-#													'item':1
-#												 } )
-#		print o
-#		print o.item
-		
-#		o = instance_from_type( {'type':"abe.missions.conditions.TimeBombCondition"})
-		
-#		print some_in_list( ["foo", "oof"], ["foo", "pouet",  "tata",  "mama"] )
-#		print some_in_list( ["foo"], ["oof", "pouet"] )
-#		print some_in_list( ["foo", "oof"], ["foo"] )
-#		print some_in_list( [ "foo", "oof" ], ["foo", "pouet",  "tata",  "mama", "oof" ] )
-
-#		self.default_missions_elligible_data = []
-#		self.default_missions_available_data = []
-#		self.default_missions_active_data = []
-#		
-#		# testing custom contains query on MissionConditionList
-#		print m3 in m4.conditions
-#		print m3 in m2.pre_conditions
-#		print "trigger3" in m4.conditions
-#		print "trigger3" in m2.pre_conditions
-#		print MissionCondition in m4.conditions
-#		print MissionRequiredCondition in m2.pre_conditions
-		
-#		# testing conditions serialization
-#		field = MissionConditionsListField()
-#		s = field.get_prep_value( m4.conditions )
-#		print s 
-#		o = field.to_python( s )
-#		print o
-		pass
 
 	def update_missions_map(self):
+		""" Update the missions list stored by the middleware. 
+		The missions list contains only active missions.
+		At the same time, the function construct the default
+		available missions list which contains only missions without
+		any preconditions of type MissionRequiredCondition.
+		"""
 		map = {}
-		missions = Mission.objects.all()
+		missions = Mission.objects.filter ( active=True)
 		
 		for mission in missions:
 			map[ str ( mission.id ) ] = mission
-		
 		self.missions_map = map
-
-	def update_user_elligible_missions( self, profile, mission ):
-		"""
-		Update the missions_elligible list of the profile with missions which 
-		require the specified mission as pre-condition.
-		"""
-		exclusion_list = profile.missions_elligible + profile.missions_available + profile.missions_active + profile.missions_done
+		
 		for k in self.missions_map : 
 			m = self.missions_map[k]
-			if m in exclusion_list :
-				continue
-			else:
-				if mission in m.pre_conditions :
-					profile.missions_elligible.append( m )
+			if m.pre_conditions is None or len( m.pre_conditions ) == 0 :
+				self.default_missions_available_data.append( m )
 
-	def init_user_missions_profile(self, user):
+	def update_user_elligible_missions( self, profile ):
+		""" Update the missions_elligible list of the profile with missions which 
+		require the specified mission as pre-condition.
+		"""
+		l = profile.missions_active + profile.missions_done
+		exclusion_list = profile.missions_elligible + profile.missions_available + profile.missions_active + profile.missions_done
+		
+		for mission in l : 
+			for k in self.missions_map : 
+				m = self.missions_map[k]
+				if m in exclusion_list :
+					continue
+				else:
+					if mission in m.pre_conditions and m not in profile.missions_elligible :
+						profile.missions_elligible.append( m )
+
+	def init_user_missions_profile(self, ctx ):
+		""" Create and initialize the profile for the user specified in ctx["user"].
+		The different missions list stored by the profile are created during
+		the call. 
+		At the end of the call, a forced check is performed for the newly
+		created profile in order to ensure that the profile is up to date
+		after its creation.
+		The created profile is retruned by the function at the end of the call
+		"""
 		profile = MissionProfile()
-		profile.user = user
-#		profile.save()
+		profile.user = ctx["user"]
+		profile.save()
 		
 		#HERE COMES THE TESTS
 		if profile.missions_elligible is None or len( profile.missions_elligible ) == 0 :
@@ -175,10 +173,35 @@ class MissionMiddleware():
 		if profile.missions_done is None:
 			profile.mission_done = MissionList()
 		
-		self.check_user_missions( { 'profile':profile, 'user':user } )
+		ctx["profile"] = profile
+
+		self.check_user_missions( ctx )
+
 		return profile
 
 	def check_user_missions(self, context ):
+		""" Performs the check of missions and conditions actually registered
+		in the user  profile and return a dict object which contains the details of
+		the changes that have occured due to this check.
+		
+		The context dict should contains any valuable datas that concret conditions
+		may use in their check. 
+		
+		Keyword arguments : 
+		context -- a dict object that contains the data used during the conditions checks.
+		
+		The context must contains at least the following items : 
+		user -- the user for which perform the mission check
+		profile -- the instance of the MissionProfile class associated with the user
+			
+		The context dict can contains another specific item : 
+		triggers -- a list of string which represents the triggers concerned by this call
+			
+		If triggers is not defined in the context dict the check will not discriminate any missions nor conditions.
+		
+		At the end of the process, the profile and the results dict are passed to the MISSION_RESULTS_PROCESSOR.
+		This processor is a simple function that take two arguments and should affect the rewards to the user.
+		"""
 		profile = context["profile"]
 		
 		elligibles = profile.missions_elligible
@@ -200,14 +223,13 @@ class MissionMiddleware():
 				response_data['deactivated'].append( m )
 			else:
 				data = m.check_completion( context, mission_data )
-				
+				print data
 				#perform changes due to completed active missions
 				# no list for the mission == no failed condition == success
 				if data["fulfilled"] : 
 					to_pop.append( n )
 					dones.append( m )
 					response_data['done'].append( m )
-					self.update_user_elligible_missions( profile, m )
 				else:
 					q = 0
 					for k, r in data.items() :
@@ -228,6 +250,8 @@ class MissionMiddleware():
 				actives.set_mission_data( m, data )
 			n+=1
 		
+		self.update_user_elligible_missions( profile )
+		
 		for n in to_pop :
 			actives.pop( n )
 		
@@ -240,6 +264,7 @@ class MissionMiddleware():
 			#an available mission can be deactivated as well
 			mission_data = availables.get_mission_data( m )
 			validity = m.check_validity( context, mission_data )
+			
 			if validity["fulfilled"] :
 				to_pop.append( n )
 				elligibles.append( m )
@@ -255,6 +280,7 @@ class MissionMiddleware():
 	
 		for m in elligibles :
 			data = m.check_availability( context, elligibles.get_mission_data( m ) )
+			print data
 			
 			#perform changes due to available elligible missions
 			# no list for the mission == no failed condition == success
@@ -280,10 +306,14 @@ class MissionMiddleware():
 					q+=1 
 			elligibles.set_mission_data( m, data )
 			n+=1
-
+		
+		for n in to_pop :
+			elligibles.pop( n )
 		#save 
-#		profile.save()
-		pp.pprint(response_data)
+		profile.save()
+		
+		processor = get_definition_with_path( msettings.MISSION_RESULTS_PROCESSOR )
+		processor( profile, response_data )
 		return response_data
 
 	def process_request( self, request):
@@ -293,37 +323,28 @@ class MissionMiddleware():
 		return None
 
 	def process_response( self, request, response):
+		""" Perform the missions and conditions checks after a view response.
+		The distinction between views that trigger a check and those who don't
+		is made by testing the type of the response object. When the mission_triggers 
+		decorator is set on a view function, the decorator wrap the view response
+		in a MissionTriggerResponse object. This object contains the view response
+		along with the context to use when testing missions and conditions.
+		
+		The response, the request and the missions data are passed to the 
+		MISSION_RESPONSE_PROCESSOR. This processor is a simple function 
+		which is in charge of handle the notification of the changes in the mission
+		profile.
+		"""
 		if not isinstance( response, MissionTriggerResponse):
 			response.content = response.content.replace( msettings.MISSION_NOTIFICATION_TOKEN, "")
 			return response
 		
-		print response.context["triggers"]
-		
 		#HERE COMES THE CHECK
-#		response_data = self.check_user_missions( profile )
+		response_data = self.check_user_missions( response.context )
 		
-#		field = MissionsListField()
-#		print "missions elligibles"
-#		print  field.get_prep_value( profile.missions_elligible )
-#		
-#		print "missions availables"
-#		print  field.get_prep_value( profile.missions_available )
-#		
-#		print "missions actives"
-#		print  field.get_prep_value( profile.missions_active )
-#		
-#		print "missions dones"
-#		print  field.get_prep_value( profile.missions_done )
-#		
-#		s = field.get_prep_value( profile.missions_elligible )
-#		o = field.to_python( s )
-#		
-#		print s
-#		print o
-#		print o.get_mission_data( o[1] )
+		processor = get_definition_with_path( msettings.MISSION_RESPONSE_PROCESSOR )
+		processor( request, response, response_data )
 
-		#TODO : Handling injection of rewards and missions notifications
-		response.response.content = response.response.content.replace( msettings.MISSION_NOTIFICATION_TOKEN, str( "" ) )
 		return response.response
 
 	def process_exception( self, request, exception):

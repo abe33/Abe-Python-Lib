@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from django.db import models
 from django import template
 from django.conf import settings
 from django.template import Library
@@ -14,6 +15,35 @@ from tagging.fields import TagField
 
 import hashlib
 import re
+import pyamf
+
+class TimeDelta:
+	def __init__(self, delta=None, total_seconds=None ):
+		if delta is not None : 
+			self.total_seconds = ((delta.microseconds + (delta.seconds + delta.days * 24 * 3600) * 10**6) / 10**6 ) if delta is not None else 0
+		elif total_seconds is not None : 
+			self.total_seconds = total_seconds
+		else:
+			self.total_seconds = 0
+
+	class __amf__:
+		external = True
+		amf3 = True
+
+	def __writeamf__(self, output):
+		output.writeInt( int( self.total_seconds * 1000 ) )
+
+	def __readamf__(self, input):
+		sec = input.readInt() 
+		self.total_seconds = sec / 1000
+	
+	def to_timedelta(self):
+		return timedelta(seconds=self.total_seconds)
+
+	def __repr__(self):
+		return str( self.to_timedelta() )
+
+pyamf.register_class( TimeDelta, 'aesia.com.mon.utils.TimeDelta' )
 
 class TagFilterSpec(FilterSpec):
 	def __init__(self, f, request, params, model, model_admin, **kwargs ):
@@ -36,32 +66,16 @@ class TagFilterSpec(FilterSpec):
 
 FilterSpec.filter_specs.insert(0, (lambda f: isinstance(f, TagField), TagFilterSpec))
 
-def instance_from_type( type ):
-	if 'type' in type :
-		a = type['type'].split( "." )
-		cls = get_class( "".join(a[-1:]), ".".join(a[:-1]))
-		print cls
-		
-		del type['type']
-		print type
-		
-		o = cls( **type )
-		print( o )
-		
-		return o
-	else:
-		raise _(u"Can't find any attributes named 'type' in %s") % str( type ) 
-
-def get_class( name, path=None ):
+def get_definition( name, path=None ):
 	if path is None or len(path)==0:
 		exec "import %s as class_alias" % name
 	else:
 		exec 'from %s import %s as class_alias' % ( path,  name )
 	return class_alias
 
-def get_class_with_path( path ):
+def get_definition_with_path( path ):
 	a = path.split(".")
-	return get_class( a[-1],".".join(a[0:-1]) )
+	return get_definition( a[-1],".".join(a[0:-1]) )
 
 def get_classpath( cls ):
 	return "%s.%s" % ( cls.__dict__["__module__"], cls.__name__ )
@@ -163,7 +177,9 @@ def timedelta_from_string( s ):
 		return None
 	if isinstance( s, timedelta ):
 		return s
-	
+	if isinstance( s, TimeDelta ):
+		return s.to_timedelta()
+		
 	d = re.search(
 			r'((?P<days>\d+) day[s]*, )?(?P<hours>\d+):'
 			r'(?P<minutes>\d+):(?P<seconds>\d+)',

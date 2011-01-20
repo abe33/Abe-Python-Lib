@@ -1,0 +1,77 @@
+{% extends "admin/base_site.html" %}
+
+<!-- LOADING -->
+{% load adminmedia admin_list i18n grp_tags tickets tickets_admin %}
+
+<!-- STYLESHEETS -->
+{% block stylesheets %}
+    {{ block.super }}
+	<link rel="stylesheet" type="text/css" href="{% admin_media_prefix %}css/changelists.css" />
+  <link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}bugs/css/pain_colors.css" />
+	{% if cl.formset %}
+    <link rel="stylesheet" type="text/css" href="{% admin_media_prefix %}css/forms.css" />
+  {% endif %}
+    {{ media.css }}
+{% endblock %}
+
+<!-- JAVASCRIPTS -->
+{% block javascripts %}
+    {{ block.super }}
+    {% if cl.formset or action_form %}
+        {% url 'admin:jsi18n' as jsi18nurl %}
+        <script type="text/javascript" src="{{ jsi18nurl|default:'../../jsi18n/'}}"></script>
+		 <script type="text/javascript" src="{{ MEDIA_URL }}js/swfobject.js"></script>
+        <script type="text/javascript" charset="utf-8">
+            (function($) {
+                $(document).ready(function() {
+                    $("tr input.action-select").actions();
+                    grappelli.initDateAndTimePicker();
+                    $("input.vForeignKeyRawIdAdminField").grp_related_fk({lookup_url:"{% url grp_related_lookup %}"});
+                    $("input.vManyToManyRawIdAdminField").grp_related_m2m({lookup_url:"{% url grp_m2m_lookup %}"});
+                    $("input[name*='object_id']").grp_related_generic({lookup_url:"{% url grp_related_lookup %}"});
+                });
+            })(django.jQuery);
+        </script>
+    {% endif %}
+    <script type="text/javascript" charset="utf-8">
+        (function($) {
+            $(document).ready(function() {
+                grappelli.initSearchbar();
+                grappelli.initFilter();
+                grappelli.initTableElements(); // HACK: add no-wrap to table-elements.
+            });
+        })(django.jQuery);
+    </script>
+    {{ media.js }}
+{% endblock %}
+
+<!-- COLTYPE/BODYCLASS-- >
+{% block bodyclass %}change-list{% endblock %}
+{% block content-class %}content-flexible{% endblock %}
+
+<!-- BREADCRUMBS -- >
+{% block breadcrumbs %}
+    {% if not is_popup %}
+        <div id="breadcrumbs">
+            <a href="../../">{% trans "Home" %}</a> &rsaquo;
+            <a href="../">{% trans app_label|capfirst|escape %}</a> &rsaquo;
+            {{ cl.opts.verbose_name_plural|capfirst }}
+        </div>
+    {% endif %}
+{% endblock %}
+
+<!-- CONTENT-TITLE -->
+{% block content_title %}
+    <h1>{{ cl.opts.verbose_name_plural|capfirst }}</h1>
+{% endblock %}
+
+<!-- CONTENT -->
+{% block content %}
+	<div id="flashcontent" style="background:#ff0000; border:1px solid #000; width:100%; height:100%;">
+	  This text is replaced by the Flash movie.
+	</div>
+
+	<script type="text/javascript">
+	   swfobject.embedSWF("{{ MEDIA_URL }}swf/MissionEditor.swf", "flashcontent", "100%", "700", "9.0.0");
+	</script>
+{% endblock %}

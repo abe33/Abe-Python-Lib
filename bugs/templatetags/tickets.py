@@ -121,23 +121,23 @@ def pain_css (ticket):
 	return css
 register.simple_tag( pain_css )
 
-def user_name (user):
+def ticket_user_name (user):
 	name = ""
 	if user.get_full_name() != "" :
 		name = user.get_full_name()
 	else:
 		name = user.username
 	return name
-register.simple_tag( user_name )
+register.simple_tag( ticket_user_name )
 
-def user_profil_url(user, target_user, link_title="", link_class="" ):
+def ticket_user_profil_url(user, target_user, link_title="", link_class="" ):
 	anchor = ""
 	if user.is_staff:
-		anchor = "<a href='%s' title='%s' class='%s'>%s</a>" % ( "#", link_title, link_class, user_name(target_user), )
+		anchor = "<a href='%s' title='%s' class='%s'>%s</a>" % ( "#", link_title, link_class, ticket_user_name(target_user), )
 	else:
-		anchor = user_name(target_user)
+		anchor = ticket_user_name(target_user)
 	return anchor
-register.simple_tag( user_profil_url )
+register.simple_tag( ticket_user_profil_url )
 
 def milestone_header(milestone, component=None):
 	return {

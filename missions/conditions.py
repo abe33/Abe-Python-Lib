@@ -5,15 +5,46 @@ from django.utils.translation import ugettext as _
 
 from abe.missions import settings as msettings
 from abe.utils import *
+from abe.types import *
 
 from datetime import *
 
 import operator
 
+def convert_to_builtin_type(obj):
+	# Convert objects to a dictionary of their representation
+	d = { '__class__':obj.__class__.__name__, 
+		  '__module__':obj.__module__,
+		  }
+	d.update(obj.__dict__)
+	return d
+	
+def dict_to_object(  d ):
+	if '__class__' in d:
+		class_name = d.pop('__class__')
+		module_name = d.pop('__module__')
+		class_ = get_definition( class_name, module_name )
+		args = dict( (key.encode('ascii'), value) for key, value in d.items())
+		inst = class_(**args)
+	else:
+		inst = d
+	return inst
+
+def json_dumps( data ):
+	try:
+		d = json.dumps(data, cls=DjangoJSONEncoder )
+		return d
+	except TypeError, err:
+		d = json.dumps( data, default=convert_to_builtin_type, cls=DjangoJSONEncoder )
+		return d
+
+def json_loads( data ):
+	return json.loads( data, object_hook=dict_to_object)
+
 class MissionConditionMetaClass(type):
 
 	def to_python( cls, value):
-		data = json.loads( value )
+		data = json_loads( value )
 		return cls( **data )
 
 class MissionCondition():
@@ -21,8 +52,9 @@ class MissionCondition():
 	"""
 	__metaclass__ = MissionConditionMetaClass
 	
+	help_text=_(u"MissionCondition is a basic condition that does nothing")
 	fields = (
-					('triggers', 'Array'),
+					('triggers', 'Array<String>', 'Array'),
 					('hidden', 'Boolean'),
 				)
 
@@ -33,11 +65,13 @@ class MissionCondition():
 	def get_prep_value(self):
 		data = self.get_prep_value_args()
 		cls =type(self)
-		return "%s.%s%s" % ( cls.__dict__["__module__"], cls.__name__, json.dumps( data,  cls=DjangoJSONEncoder ) )
+		return "%s.%s%s" % ( cls.__dict__["__module__"], cls.__name__, json_dumps( data ) )
 
 	def get_prep_value_args(self):
-		return {'triggers' : self.triggers, 
-					  'hidden':self.hidden}
+		return {
+					  'triggers' : self.triggers, 
+					  'hidden':self.hidden 
+					}
 
 	def check( self, context, past_state, mission_data ):
 		return {
@@ -48,21 +82,27 @@ class MissionCondition():
 	def get_descriptor(self):
 		return {'description':_("MissionCondition is a base condition that concret ones extends.")}
 
-	def to_type(self):
-		t = {}
-		cls = type(self)
+	@classmethod
+	def to_type( cls ):
+		struct = {}
+		form_struct = {}
 		l = cls.fields
 		for i in l :
-			t [ i [ 0 ] ] = i [ 1 ]
-		
-		t["type"] = get_classpath(type(self))
-		t["help"] = cls.__doc__
-		if cls is not MissionCondition :
-			t["extends"] = "abe.missions.conditions.MissionCondition"
-		return t
+			struct [ i [ 0 ] ] = i [ 1 ]
+			if len( i ) == 3 : 
+				form_struct [ i [ 0 ] ] = i [ 2 ]
+			else : 
+				form_struct [ i [ 0 ] ] = i [ 1 ]
+
+		return Type( 	type=get_classpath( cls ), 
+								struct=struct, 
+								form_struct=form_struct, 
+								help_text=cls.help_text, 
+								parent_type="abe.missions.conditions.MissionCondition", 
+							)
 	
 	def to_vo(self):
-		return dict( { 'type':get_classpath( type(self) ) }, **self.get_prep_value_args() )
+		return TypeInstance( type(self).to_type(), self.get_prep_value_args() )
 
 class NumericComparisonCondition(MissionCondition):
 	"""A condition that checks two numerical values using a comparison operator
@@ -74,11 +114,14 @@ class NumericComparisonCondition(MissionCondition):
 	Where [comparison operator] can be one of the following operator : 
 	==, !=, >, >=, <, <=
 	"""
+	help_text=_( u"NumericComparisonCondition is a basic condition that compare two numeric values with the specified operator. "
+						u"The condition is considered fulfilled if the value from the context match the following expression : "
+						u"context value <i>operator</i> condition value.")
 	fields = (
-					('triggers', 'Array'),
+					('triggers', 'Array<String>',  'Array'),
 					('hidden', 'Boolean'),
-					('value', 'Number', ) ,
-					('comparison', 'String(==,!=,<,<=,>,>=)', ) ,
+					('value', 'Number', 'intSpinner' ) ,
+					('comparison', 'String', 'String(==,!=,<,<=,>,>=)' ) ,
 				)
 	def __init__(self, value=0, comparison="==", **kwargs):
 		super( NumericComparisonCondition, self ).__init__( **kwargs )
@@ -92,8 +135,8 @@ class NumericComparisonCondition(MissionCondition):
 		op = getattr ( msettings.COMPARISON_OPERATORS_MAP, comparison, operator.eq )
 		return op( a, b )
 
-	def check(self, context, past_state, mission_data ):
 		test_value = self.get_test_value( context, past_state, mission_data )
+        def check(self, context, past_state, mission_data ):
 		res = self.perform_comparison( self.value, test_value, self.comparison )
 		if not res : 
 			return {
@@ -118,8 +161,9 @@ class NumericComparisonCondition(MissionCondition):
 class ItemInListCondition(MissionCondition):
 	"""A condition that check that a specific item exist in a list
 	"""
+	help_text=_(u"ItemInListCondition is a basic condition that check that a specific value from the context is present in a list of possible values.")
 	fields = (
-					('triggers', 'Array'),
+					('triggers', 'Array<String>', 'Array'),
 					('hidden', 'Boolean'),
 					('item', 'String', ) ,
 				)
@@ -134,14 +178,14 @@ class ItemInListCondition(MissionCondition):
 		if fulfilled :
 			return {
 							'fulfilled':True, 
-							'item':str( self.item ), 
+							'item': str ( self.item ), 
 							'items_list': l,
 						}
 		else:
 			return {
 							'fulfilled':False, 
 							'reason':_(u"The item '%s' can't be found in the list '%s'.") % ( self.item, l ), 
-							'item':str( self.item ), 
+							'item': str( self.item ), 
 							'items_list':l,
 						}
 	
@@ -149,7 +193,7 @@ class ItemInListCondition(MissionCondition):
 		return []
 
 	def get_prep_value_args(self):
-		return dict( super(ItemInListCondition, self).get_prep_value_args(), **{'item' : self.item })
+		return dict( super(ItemInListCondition, self).get_prep_value_args(), **{'item' : str( self.item ), } )
 
 
 class TimeDeltaCondition(MissionCondition):
@@ -167,15 +211,20 @@ class TimeDeltaCondition(MissionCondition):
 		- The date related to the condition mecanics like the current date, or the fixed date of a competition end.
 	And self.delta is a timedelta object, meaning a distance between two dates.
 	"""
+	help_text= _(u"TimeDeltaCondition is a basic condition that compare two dates using a time delta. "
+						u"The condition is considered fulfilled if the date from the context match the following expression : "
+						u"condition date - context date <i>operator</i> time delta.")
 	fields = (
-					('triggers', 'Array', ),
+					('triggers', 'Array<String>', 'Array' ),
 					('hidden', 'Boolean', ),
-					('delta', 'TimeDelta', ), 
-					('comparison', 'String(==,!=,<,<=,>,>=)', ) ,
+					('delta', 'aesia.com.mon.utils::TimeDelta', 'timeDelta'), 
+					('comparison', 'String', 'String(==,!=,<,<=,>,>=)' ) ,
 				)
 	
-	def __init__(self, delta=timedelta(), comparison="==", **kwargs ):
-		self.delta = timedelta_from_string( delta )
+	def __init__(self, delta=TimeDelta(), comparison="==", **kwargs ):
+		super( TimeDeltaCondition, self ).__init__( **kwargs )
+#		self.delta = timedelta_from_string( delta )
+		self.delta = delta
 		self.comparison = comparison
 	
 	def ckeck( self, context, past_state, mission_data ):
@@ -183,23 +232,23 @@ class TimeDeltaCondition(MissionCondition):
 		d1 = self.get_date( context, past_state, mission_data )
 		d2 = self.get_test_date( context, past_state, mission_data )
 		delta = d2 - d1
-		fulfilled = op( self.delta, delta )
+		fulfilled = op( self.delta.to_timedelta(), delta )
 		if fulfilled:
 			return {
 							'fulfilled':True, 
 							'user_date':d1, 
 							'condition_date':d2, 
-							'user_delta':delta, 
-							'condition_delta':self.delta,
+							'user_delta':str(delta), 
+							'condition_delta':str(self.delta),
 						}
 		else:
 			return {
 							'fulfilled':False, 
-							'reason':_(u"The"), 
+							'reason':_(u"The delta don't match the expression"), 
 							'user_date':d1, 
 							'condition_date':d2, 
-							'user_delta':delta, 
-							'condition_delta':self.delta,
+							'user_delta':str(delta), 
+							'condition_delta':str(self.delta),
 						}
 	
 	def get_date(self, context, past_state, mission_data ):
@@ -209,7 +258,7 @@ class TimeDeltaCondition(MissionCondition):
 		return date.today()
 	
 	def get_prep_value_args(self):
-		return dict( super(DateCondition, self).get_prep_value_args(), **{
+		return dict( super(TimeDeltaCondition, self).get_prep_value_args(), **{
 																												'delta' : self.delta, 
 																												'comparison':self.comparison, 
 																											})
@@ -243,12 +292,16 @@ class DateCondition(MissionCondition):
 	
 	condition = TimeBombCondition( date( 2012, 12, 12 ), "<" )
 	"""
+	help_text= _(u"DateCondition is a basic condition that compare two dates. "
+						u"The condition is considered fulfilled if the date from the context match the following expression : "
+						u"context date <i>operator</i> condition date.")
 	fields = (
-					('triggers', 'Array', ),
+					('triggers', 'Array<String>', 'Array' ),
 					('hidden', 'Boolean', ),
-					('comparison', 'String(==,!=,<,<=,>,>=)', ) ,
+					('comparison', 'String', 'String(==,!=,<,<=,>,>=)' ) ,
 				)
 	def __init__(self, comparison="==", **kwargs ):
+		super( DateCondition, self ).__init__( **kwargs )
 		self.comparison = comparison
 
 	def ckeck( self, context, past_state, mission_data ):
@@ -270,11 +323,17 @@ class DateCondition(MissionCondition):
 		return date.today()
 
 	def get_prep_value_args(self):
-		return dict( super(DateCondition, self).get_prep_value_args(), **{'date' : self.date, 'comparison':self.comparison})
+		print type(self)
+		return dict( super( DateCondition, self  ).get_prep_value_args(), **{'date' : self.date, 'comparison':self.comparison})
 
 class TrueCondition(MissionCondition):
 	"""A fake condition which always return True.
 	"""
+	help_text=_("TrueCondition is a fake condition which is always considered as fulfilled.")
+	
+	def __init__(self, **kwargs ):
+		super( TrueCondition, self ).__init__( **kwargs )
+	
 	def check(self, context, past_state, mission_data):
 		return {
 						'fulfilled':True, 
@@ -295,10 +354,15 @@ class MissionsDoneCountCondition(NumericComparisonCondition):
 	
 	c = MissionsDoneCountCondition( 10, ">=" )
 	"""
+	help_text=_("MissionsDoneCountCondition is condition that is considered fulfilled when the player reach a specific number of completed missions.")
+	
+	def __init__(self, **kwargs ):
+		super( MissionsDoneCountCondition, self ).__init__( **kwargs )
+	
 	def get_test_value(self, context ):
 		return len(context["profile"].missions_done)
 
-class MissionRequiredCondition(ItemInListCondition):
+class MissionRequiredCondition( ItemInListCondition ):
 	"""A condition which check if a specific mission have been completed
 	by a user.
 	
@@ -307,16 +371,21 @@ class MissionRequiredCondition(ItemInListCondition):
 	Exemple : 
 	c = MissionRequiredCondition( 3 )
 	"""
+	help_text=_(u"MissionRequiredCondition is a condition that is considered fulfilled when the player complete a specific mission. "
+					   u"This condition is generally used as a preconditions to build a missions tree.")
 	fields = (
-					('triggers', 'Array'),
+					('triggers', 'Array<String>', 'Array'),
 					('hidden', 'Boolean'),
-					('item', 'abe.missions.models.Mission', ) ,
+					('item', 'String', ) ,
 				)
-
+	
+	def __init__(self, **kwargs ):
+		super( MissionRequiredCondition, self ).__init__( **kwargs )
+		
 	def get_list(self, context, past_state, mission_data ):
-		return [ o.id for o in context["profile"].missions_done ]
+		return [ str( o.id) for o in context["profile"].missions_done ]
 
-class MissionStartedSinceCondition(TimeDeltaCondition):
+class MissionStartedSinceCondition( TimeDeltaCondition ):
 	"""A condition which is true if the start date of the mission that own this condition
 	satisfy the delta constraint of this condition
 	
@@ -332,6 +401,11 @@ class MissionStartedSinceCondition(TimeDeltaCondition):
 	
 	c = MissionStartedSinceCondition( timedelta(14), ">=" )
 	"""
+	help_text=_(u"MissionStartedSinceCondition is a condition that check the start date of a mission and the current date against a specific time delta.")
+	
+	def __init__(self, **kwargs ):
+		super( MissionStartedSinceCondition, self ).__init__( **kwargs )
+	
 	def get_date(self, context, past_state, mission_data ):
 		return datetime_from_string( mission_data.added )
 
@@ -339,11 +413,13 @@ class TimeBombCondition( DateCondition ):
 	"""A condition which check the current day against a predefined date
 		using the specified comparison operator.
 	"""
+	help_text=_(u"TimeBombCondition is a condition that check the current date against a specific date. "
+					   u"By default, the condition date is the current date.")
 	fields = (
-					('triggers', 'Array', ),
+					('triggers', 'Array<String>', 'Array' ),
 					('hidden', 'Boolean', ),
-					('date', 'Date', ), 
-					('comparison', 'String(==,!=,<,<=,>,>=)', ) ,
+					('date', 'Date' ), 
+					('comparison', 'String', 'String(==,!=,<,<=,>,>=)' ) ,
 				)
 	def __init__(self, date=date.today(), **kwargs ):
 		super( TimeBombCondition, self ).__init__( **kwargs )

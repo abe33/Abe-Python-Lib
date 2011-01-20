@@ -9,8 +9,8 @@ from datetime import datetime
 from abe.missions.conditions import *
 from abe.missions.rewards import *
 from abe.missions import settings as msettings
-from abe.utils import get_class
-from abe.utils import get_classpath
+from abe.utils import *
+from abe.types import *
 
 import inspect
 import operator
@@ -22,7 +22,7 @@ class MissionConditionList(list):
 	def __contains__(self, o ):
 		if isinstance( o, Mission ):
 			for c in self : 
-				if isinstance( c, MissionRequiredCondition ) and c.item == o.id :
+				if isinstance( c, MissionRequiredCondition ) and c.item == str(o.id) :
 					return True
 			return False
 		
@@ -70,7 +70,7 @@ class MissionConditionsListField(models.Field):
 
 	def get_condition(self, value ):
 		res = msettings.OBJECTS_TYPE_RE.search( value )
-		cls = get_class( res.group(3), res.group(2) )
+		cls = get_definition( res.group(3), res.group(2) )
 		value = value.replace( res.group(0), "" )
 		return cls.to_python( value )
 
@@ -99,15 +99,24 @@ class MissionRewardsListField(models.Field):
 		if value is None :
 			return ""
 		else:
+			print value
 			return msettings.OBJECTS_LIST_SEPARATOR[:1].join( [o.get_prep_value() for o in value] )
 
-	def get_condition(self,  value ):
+	def get_reward(self,  value ):
 		res = msettings.OBJECTS_TYPE_RE.search( value )
-		cls = get_class( res.group(3), res.group(2) )
+		cls = get_definition( res.group(3), res.group(2) )
 		value = value.replace( res.group(0), "" )
 		return cls.to_python( value )
 
 class Mission(models.Model):
+	""" A mission is defined by several elements : 
+	pre_conditions -- A list of conditions needed to allow the user to have access to this mission.
+	conditions -- A list of conditions the user have to fulfill to complete this mission.
+	validity_conditions -- A list of conditions that make the mission unavailable to the user when fulfilled.
+	rewards -- A list of MissionReward objects that the user will gain after having completed this mission.
+	active -- A boolean value indicate whether this mission is active or not. An inactive mission is not registerered by the MissionMiddleware instance.
+	"""
+	
 	name = models.CharField(_(u"Name"),  max_length=50)
 	active = models.BooleanField(_(u"Active"), default=False )
 
@@ -129,7 +138,17 @@ class Mission(models.Model):
 	rewards = MissionRewardsListField(_(u"Mission Rewards"), blank=True, default="", 
 														  help_text=_(u"A list of rewards the user gets "
 																			 u"when he complete the mission."))
-
+	
+	help_text=_(u"A Mission object is defined by a set of conditions and rewards.")
+	fields = (
+					('name', 'String'), 
+					('active', 'Boolean'), 
+					('pre_conditions', 'Array<abe.missions.conditions.MissionCondition>', 'Array'), 
+					('conditions', 'Array<abe.missions.conditions.MissionCondition>', 'Array'), 
+					('validity_conditions', 'Array<abe.missions.conditions.MissionCondition>', 'Array'), 
+					('rewards', 'Array<abe.missions.rewards.MissionReward>', 'Array'), 
+				)
+	
 	def __init__(self, *args, **kwargs ):
 		super(Mission, self ).__init__(*args, **kwargs)
 		self.descriptor = None
@@ -145,7 +164,7 @@ class Mission(models.Model):
 
 	def check_conditions(self, context, conditions, past_states = None ) :
 		if conditions is None or len( conditions ) == 0 : 
-			return {'fulfilled':True}
+			return {'fulfilled':False}
 
 		fulfilled = 0
 		datas = {}
@@ -158,9 +177,9 @@ class Mission(models.Model):
 					data = self.check_condition( context, condition, past_state, past_states )
 			else:
 				data = self.check_condition( context, condition, past_state, past_states )
-			
+
 			datas[ str(i) ] = data
-			if getattr( data, 'fulfilled', False ):
+			if data['fulfilled'] :
 				fulfilled += 1
 		
 		if fulfilled == len(conditions) :
@@ -179,22 +198,44 @@ class Mission(models.Model):
 	def __unicode__(self):
 		return u"%s" % self.name
 	
+	@classmethod
+	def to_type( cls ):
+		struct = {}
+		form_struct = {}
+		l = cls.fields
+		
+		for i in l :
+			struct [ i [ 0 ] ] = i [ 1 ]
+			if len( i ) == 3 : 
+				form_struct [ i [ 0 ] ] = i [ 2 ]
+			else : 
+				form_struct [ i [ 0 ] ] = i [ 1 ]
+
+		return Type( 	type=get_classpath( cls ), 
+								struct=struct, 
+								form_struct=form_struct, 
+								help_text=cls.help_text
+							)
+
 	def to_vo(self):
-		return {
-						'name':self.name , 
-						'pre_conditions':[ o.to_vo() for o in self.pre_conditions ] if self.pre_conditions is not None else [],
-						'conditions':[ o.to_vo() for o in self.conditions ] if self.conditions is not None else [],
-						'validity_conditions':[ o.to_vo() for o in self.validity_conditions ] if self.validity_conditions is not None else [],
-						'rewards':[ o.to_vo() for o in self.rewards ] if self.rewards is not None else [],
-					}
+		return TypeInstance( type( self ).to_type(),  
+										{
+											'name':self.name , 
+											'pre_conditions':[ o.to_vo() for o in self.pre_conditions ] if self.pre_conditions is not None else [],
+											'conditions':[ o.to_vo() for o in self.conditions ] if self.conditions is not None else [],
+											'validity_conditions':[ o.to_vo() for o in self.validity_conditions ] if self.validity_conditions is not None else [],
+											'rewards':[ o.to_vo() for o in self.rewards ] if self.rewards is not None else [],
+											'active':self.active, 
+										},
+										self.id )
 	
 	def get_descriptor(self):
 		if self.descriptor is None : 
 			cls_path = msettings.MISSION_DESCRIPTOR_CLASS
 			if cls_path is not None :
 				try:
-					cls = get_class_with_path( cls_path )
-					res = cls.objects.get( mission__id=self.id )
+					cls = get_definition_with_path( cls_path )
+					res = cls.objects.get( mission=self.id )
 					if res is None : 
 						self.descriptor = {}
 					else : 
@@ -215,7 +256,7 @@ class Mission(models.Model):
 		return condition.get_descriptor()
 
 class MissionDescriptor(models.Model):
-	mission = models.ForeignKey( Mission, verbose_name=_(u"Mission"), related_name="mission_descriptor_mission")
+	mission = models.IntegerField( _(u"Mission") )
 	description = models.TextField(_(u"Mission Description"), 
 													blank=True, 
 													default="", 
@@ -223,18 +264,37 @@ class MissionDescriptor(models.Model):
 																	   u"the description should include a briefing about what the user can "
 																	   u"do to fulfill the mission using the gameplay terminology."))
 	
+	help_text=_(u"A MissionDescriptor instance is associated with a Mission object and provide site specific informations for this object.")
 	fields = (
-					('description', 'String'), 
-					('mission', 'Mission'), 
+					('description', 'String', 'text'), 
+					('mission', 'String'), 
 				)
 	
-	def to_type(self):
-		t = {}
-		for i in type(self).fields :
-			t [ i [ 0 ] ] = i [ 1 ]
-		
-		t["type"] = get_classpath(type(self))
-		return t
+	@classmethod
+	def to_type( cls ):
+		struct = {}
+		form_struct = {}
+		l = cls.fields
+		for i in l :
+			struct [ i [ 0 ] ] = i [ 1 ]
+			if len( i ) == 3 : 
+				form_struct [ i [ 0 ] ] = i [ 2 ]
+			else : 
+				form_struct [ i [ 0 ] ] = i [ 1 ]
+
+		return Type( 	type=get_classpath( cls ), 
+								struct=struct, 
+								form_struct=form_struct, 
+								help_text=cls.help_text
+							)
+
+	def to_vo(self):
+		return TypeInstance( type(self).to_type(),  
+										{
+											'mission':str(self.mission), 
+											'description':self.description, 
+										}, 
+										self.id)
 
 class MissionList(list):
 	def __init__(self, * args, **kwargs ):
@@ -333,7 +393,7 @@ class MissionsListField( models.Field):
 		return "%s%s" % ( str( o.id ), json.dumps( missions.get_mission_data( o ),  cls=DjangoJSONEncoder ) )
 
 	def get_mission( self, value ):
-		return msettings.MISSION_MIDDLEWARE_INSTANCE.missions_map[ int(value) ]
+		return msettings.MISSION_MIDDLEWARE_INSTANCE.missions_map[ value ]
 
 class MissionProfile(models.Model):
 	# l'utilisateur cible

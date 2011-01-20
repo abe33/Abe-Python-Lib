@@ -57,7 +57,7 @@ MEDIA_URL = 'http://localhost/abe_media/'
 # URL prefix for admin media -- CSS, JavaScript and images. Make sure to use a
 # trailing slash.
 # Examples: "http://foo.com/media/", "/media/".
-ADMIN_MEDIA_PREFIX = '/media/'
+ADMIN_MEDIA_PREFIX = '/media/admin/'
 
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = '4nq(63t*c_@h6@gl95gasv5qbpp4toor5*y(!d-r+y$h9s&obq'
@@ -98,15 +98,16 @@ TEMPLATE_CONTEXT_PROCESSORS = ("django.contrib.auth.context_processors.auth",
 "abe.context_processors.media_url",)
 
 INSTALLED_APPS = (
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.sites',
-    'django.contrib.messages',
+	'grappelli', 
+	'django.contrib.auth',
+	'django.contrib.contenttypes',
+	'django.contrib.sessions',
+	'django.contrib.sites',
+	'django.contrib.messages',
 	'django.contrib.comments',
-    'django.contrib.admin',
+	'django.contrib.admin',
 	'django.contrib.admindocs',
-    'abe.posts', 
+	'abe.posts', 
 	'abe.bugs', 
 	'tagging', 
 	'missions', 

@@ -71,7 +71,7 @@
 			<dd>{{ ticket.closed_in_milestone }}</dd>
 			
 			<dt>{{ labels.creator }}</dt>
-			<dd><a href="{{ ticket.creator.get_absolute_url }}" class="user">{% user_name ticket.creator %}</a></dd>
+			<dd><a href="{{ ticket.creator.get_absolute_url }}" class="user">{% ticket_user_name ticket.creator %}</a></dd>
 			</dl>
 		</fieldset>
 		<fieldset>
@@ -80,14 +80,14 @@
 			<dt><!--{{ labels.assignees }}-->{% trans "Assignees"%}</dt>
 			<dd>{% if ticket.is_affected %}
 					{% for u in ticket.assignees.all %}
-						<a href="{{ u.get_absolute_url }}" class="user">{% user_name u %}</a>{% if not forloop.last %}, {% endif %}
+						<a href="{{ u.get_absolute_url }}" class="user">{% ticket_user_name u %}</a>{% if not forloop.last %}, {% endif %}
 					{% endfor %}
 				{% else %}
 						{% trans "None" %}
 				{% endif %}</dd>
 			{% if ticket.is_affected %}
 			<dt>{{ labels.assignee_head }}</dt>
-			<dd>{% if ticket.assignee_head %}{% user_name ticket.assignee_head %}{% else %}{% trans "None" %}{% endif %}</dd>
+			<dd>{% if ticket.assignee_head %}{% ticket_user_name ticket.assignee_head %}{% else %}{% trans "None" %}{% endif %}</dd>
 			{% endif %}
 			<dt>{{ labels.creation_date }}</dt>
 			<dd>
