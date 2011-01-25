@@ -132,11 +132,14 @@ class NumericComparisonCondition(MissionCondition):
 		return 0
 
 	def perform_comparison(self, a, b, comparison ):
-		op = getattr ( msettings.COMPARISON_OPERATORS_MAP, comparison, operator.eq )
+		op = msettings.COMPARISON_OPERATORS_MAP[comparison]
+		if op is None : 
+			op = operator.eq
+		
 		return op( a, b )
-
 		test_value = self.get_test_value( context, past_state, mission_data )
-        def check(self, context, past_state, mission_data ):
+
+	def check(self, context, past_state, mission_data ):
 		res = self.perform_comparison( self.value, test_value, self.comparison )
 		if not res : 
 			return {
@@ -196,7 +199,7 @@ class ItemInListCondition(MissionCondition):
 		return dict( super(ItemInListCondition, self).get_prep_value_args(), **{'item' : str( self.item ), } )
 
 
-class TimeDeltaCondition(MissionCondition):
+class TimeDeltaCondition( MissionCondition ):
 	"""A condition that check the time delta between an arbitrary date
 	and the specified date using the specified operator.
 	
@@ -227,12 +230,16 @@ class TimeDeltaCondition(MissionCondition):
 		self.delta = delta
 		self.comparison = comparison
 	
-	def ckeck( self, context, past_state, mission_data ):
-		op = getattr ( msettings.COMPARISON_OPERATORS_MAP, comparison, operator.eq )
+	def check( self, context, past_state, mission_data ):
+		op = msettings.COMPARISON_OPERATORS_MAP[self.comparison]
+		if op is None : 
+			op = operator.eq
+		
 		d1 = self.get_date( context, past_state, mission_data )
 		d2 = self.get_test_date( context, past_state, mission_data )
 		delta = d2 - d1
-		fulfilled = op( self.delta.to_timedelta(), delta )
+		fulfilled = op( delta, self.delta.to_timedelta() )
+		
 		if fulfilled:
 			return {
 							'fulfilled':True, 
@@ -240,6 +247,7 @@ class TimeDeltaCondition(MissionCondition):
 							'condition_date':d2, 
 							'user_delta':str(delta), 
 							'condition_delta':str(self.delta),
+							'comparison':self.comparison, 
 						}
 		else:
 			return {
@@ -249,13 +257,14 @@ class TimeDeltaCondition(MissionCondition):
 							'condition_date':d2, 
 							'user_delta':str(delta), 
 							'condition_delta':str(self.delta),
+							'comparison':self.comparison, 
 						}
 	
 	def get_date(self, context, past_state, mission_data ):
-		return date.today()
+		return datetime.today()
 	
 	def get_test_date(self, context, past_state, mission_data ):
-		return date.today()
+		return datetime.today()
 	
 	def get_prep_value_args(self):
 		return dict( super(TimeDeltaCondition, self).get_prep_value_args(), **{
@@ -304,8 +313,11 @@ class DateCondition(MissionCondition):
 		super( DateCondition, self ).__init__( **kwargs )
 		self.comparison = comparison
 
-	def ckeck( self, context, past_state, mission_data ):
-		op = getattr ( msettings.COMPARISON_OPERATORS_MAP, comparison, operator.eq )
+	def check( self, context, past_state, mission_data ):
+		op = msettings.COMPARISON_OPERATORS_MAP[self.comparison]
+		if op is None : 
+			op = operator.eq
+		
 		d1 = self.get_date(context, past_state, mission_data )
 		d2 = self.get_test_date( context, past_state, mission_data )
 		fulfilled = op( d1, d2 )
@@ -317,10 +329,10 @@ class DateCondition(MissionCondition):
 						}
 	
 	def get_date(self, context, past_state, mission_data ):
-		return date.today()
+		return datetime.today()
 	
 	def get_test_date(self, context, past_state, mission_data ):
-		return date.today()
+		return datetime.today()
 
 	def get_prep_value_args(self):
 		print type(self)
@@ -407,7 +419,7 @@ class MissionStartedSinceCondition( TimeDeltaCondition ):
 		super( MissionStartedSinceCondition, self ).__init__( **kwargs )
 	
 	def get_date(self, context, past_state, mission_data ):
-		return datetime_from_string( mission_data.added )
+		return datetime_from_string( mission_data["added"] )
 
 class TimeBombCondition( DateCondition ):
 	"""A condition which check the current day against a predefined date
@@ -421,9 +433,9 @@ class TimeBombCondition( DateCondition ):
 					('date', 'Date' ), 
 					('comparison', 'String', 'String(==,!=,<,<=,>,>=)' ) ,
 				)
-	def __init__(self, date=date.today(), **kwargs ):
+	def __init__(self, date=datetime.today(), **kwargs ):
 		super( TimeBombCondition, self ).__init__( **kwargs )
-		self.date = date_from_string(date)
+		self.date = datetime_from_string(date)
 	
 	def get_test_date( context, past_state, mission_data ):
 		return self.date

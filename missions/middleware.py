@@ -215,15 +215,17 @@ class MissionMiddleware():
 		n = 0
 		for m in actives :
 			#first we check for the validity conditions of  the actives missions
+			
 			mission_data = actives.get_mission_data( m )
 			validity = m.check_validity( context, mission_data )
+#			print "checking validity of mission %s with data %s and results %s" % (m, str(mission_data), str(validity))
 			if validity["fulfilled"] :
 				to_pop.append( n )
 				elligibles.append( m )
 				response_data['deactivated'].append( m )
 			else:
 				data = m.check_completion( context, mission_data )
-				print data
+#				print data
 				#perform changes due to completed active missions
 				# no list for the mission == no failed condition == success
 				if data["fulfilled"] : 
@@ -247,7 +249,7 @@ class MissionMiddleware():
 							response_data['active'].append( ( m, condition, data[k] ) )
 						q+=1
 					
-				actives.set_mission_data( m, data )
+					actives.set_mission_data( m, data )
 			n+=1
 		
 		self.update_user_elligible_missions( profile )
@@ -280,7 +282,7 @@ class MissionMiddleware():
 	
 		for m in elligibles :
 			data = m.check_availability( context, elligibles.get_mission_data( m ) )
-			print data
+#			print data
 			
 			#perform changes due to available elligible missions
 			# no list for the mission == no failed condition == success
@@ -312,8 +314,11 @@ class MissionMiddleware():
 		#save 
 		profile.save()
 		
+		print response_data
+		
 		processor = get_definition_with_path( msettings.MISSION_RESULTS_PROCESSOR )
 		processor( profile, response_data )
+		
 		return response_data
 
 	def process_request( self, request):

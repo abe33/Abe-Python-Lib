@@ -34,7 +34,9 @@ class TimeDelta:
 		output.writeInt( int( self.total_seconds * 1000 ) )
 
 	def __readamf__(self, input):
+#		print "read amf for timedelta"
 		sec = input.readInt() 
+#		print "delta sec"
 		self.total_seconds = sec / 1000
 	
 	def to_timedelta(self):
