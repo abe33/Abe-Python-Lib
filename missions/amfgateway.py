@@ -103,6 +103,7 @@ def mission_publish(request, mission):
 	pass
 
 #@login_required
+@mission_gateway_triggers("trigger")
 def missions_middleware_update(request):
 	MISSION_MIDDLEWARE_INSTANCE.update_missions_map()
 	

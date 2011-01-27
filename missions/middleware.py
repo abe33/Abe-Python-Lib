@@ -15,11 +15,15 @@ import pprint
 
 pp = pprint.PrettyPrinter(indent=4)
 
-def get_user_mission_profile( user ):
+def get_user_mission_profile( request ):
+	user = request.user
 	try :
 		profile = MissionProfile.objects.get(user=user) 
 	except :
-		profile = msettings.MISSION_MIDDLEWARE_INSTANCE.init_user_missions_profile( {'user':user } )
+		profile = msettings.MISSION_MIDDLEWARE_INSTANCE.init_user_missions_profile( user )
+		processor = get_definition_with_path( msettings.MISSION_CONTEXT_PROCESSOR )
+		context = processor( request )
+		msettings.MISSION_MIDDLEWARE_INSTANCE.check_user_missions( context )
 	return profile
 
 def is_valid_minimal_context( context ):
@@ -50,17 +54,19 @@ def default_mission_response_processor( request, response, response_data ):
 	"""
 	response.response.content = response.response.content.replace( msettings.MISSION_NOTIFICATION_TOKEN, str( response_data ) )
 
-def default_mission_context_processor( user ):
+def default_mission_context_processor( request ):
 	"""Default context processor for the mission middleware checking context.
 	A minimal context must contains a user and profile fields with respectively
 	the target user and its associated MissionProfile.
 	"""
-	profile = get_user_mission_profile( user )
-	return {'user': user,  'profile':profile }
+	print "default_mission_context_processor"
+	user = request.user
+	profile = get_user_mission_profile( request )
+	return {'user': user,  'profile':profile, 'request':request }
 
-def activate_mission( user, mission ):
+def activate_mission( request, mission ):
 	processor = get_definition_with_path( msettings.MISSION_CONTEXT_PROCESSOR )
-	context = processor( user )
+	context = processor( request )
 	profile = context["profile"]
 
 	if mission in profile.missions_available : 
@@ -137,17 +143,19 @@ class MissionMiddleware():
 		"""
 		l = profile.missions_active + profile.missions_done
 		exclusion_list = profile.missions_elligible + profile.missions_available + profile.missions_active + profile.missions_done
-		
-		for mission in l : 
-			for k in self.missions_map : 
-				m = self.missions_map[k]
-				if m in exclusion_list :
-					continue
-				else:
-					if mission in m.pre_conditions and m not in profile.missions_elligible :
-						profile.missions_elligible.append( m )
+		for k in self.missions_map : 
+			m = self.missions_map[k]
+			if m in exclusion_list :
+				continue
+			elif m not in profile.missions_elligible:
+				if MissionRequiredCondition not in m.pre_conditions : 
+					profile.missions_elligible.append( m )
+				else : 
+					for mission in l : 
+						if mission in m.pre_conditions :
+							profile.missions_elligible.append( m )
 
-	def init_user_missions_profile(self, ctx ):
+	def init_user_missions_profile(self, user ):
 		""" Create and initialize the profile for the user specified in ctx["user"].
 		The different missions list stored by the profile are created during
 		the call. 
@@ -157,7 +165,7 @@ class MissionMiddleware():
 		The created profile is retruned by the function at the end of the call
 		"""
 		profile = MissionProfile()
-		profile.user = ctx["user"]
+		profile.user = user
 		profile.save()
 		
 		#HERE COMES THE TESTS
@@ -172,10 +180,6 @@ class MissionMiddleware():
 		
 		if profile.missions_done is None:
 			profile.mission_done = MissionList()
-		
-		ctx["profile"] = profile
-
-		self.check_user_missions( ctx )
 
 		return profile
 
@@ -266,7 +270,6 @@ class MissionMiddleware():
 			#an available mission can be deactivated as well
 			mission_data = availables.get_mission_data( m )
 			validity = m.check_validity( context, mission_data )
-			
 			if validity["fulfilled"] :
 				to_pop.append( n )
 				elligibles.append( m )
@@ -343,7 +346,7 @@ class MissionMiddleware():
 		if not isinstance( response, MissionTriggerResponse):
 			response.content = response.content.replace( msettings.MISSION_NOTIFICATION_TOKEN, "")
 			return response
-		
+			
 		#HERE COMES THE CHECK
 		response_data = self.check_user_missions( response.context )
 		

@@ -35,7 +35,7 @@ def activate_missions( request ):
 		for k in l:
 			res = test.match( k )
 			m = msettings.MISSION_MIDDLEWARE_INSTANCE.missions_map[res.group(1)]
-			activate_mission( request.user, m )
+			activate_mission( request, m )
 			
 		return redirect( "missions_list" )
 	else :

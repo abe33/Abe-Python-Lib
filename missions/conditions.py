@@ -54,7 +54,7 @@ class MissionCondition():
 	
 	help_text=_(u"MissionCondition is a basic condition that does nothing")
 	fields = (
-					('triggers', 'Array<String>', 'Array'),
+					('triggers', 'Array<String>', 'Array%s' % msettings.MISSION_TRIGGERS_LIST ),
 					('hidden', 'Boolean'),
 				)
 
@@ -117,9 +117,7 @@ class NumericComparisonCondition(MissionCondition):
 	help_text=_( u"NumericComparisonCondition is a basic condition that compare two numeric values with the specified operator. "
 						u"The condition is considered fulfilled if the value from the context match the following expression : "
 						u"context value <i>operator</i> condition value.")
-	fields = (
-					('triggers', 'Array<String>',  'Array'),
-					('hidden', 'Boolean'),
+	fields = MissionCondition.fields + (
 					('value', 'Number', 'intSpinner' ) ,
 					('comparison', 'String', 'String(==,!=,<,<=,>,>=)' ) ,
 				)
@@ -137,10 +135,10 @@ class NumericComparisonCondition(MissionCondition):
 			op = operator.eq
 		
 		return op( a, b )
-		test_value = self.get_test_value( context, past_state, mission_data )
 
 	def check(self, context, past_state, mission_data ):
-		res = self.perform_comparison( self.value, test_value, self.comparison )
+		test_value = self.get_test_value( context, past_state, mission_data )
+		res = self.perform_comparison( test_value, self.value, self.comparison )
 		if not res : 
 			return {
 							'fulfilled':False, 
@@ -165,9 +163,7 @@ class ItemInListCondition(MissionCondition):
 	"""A condition that check that a specific item exist in a list
 	"""
 	help_text=_(u"ItemInListCondition is a basic condition that check that a specific value from the context is present in a list of possible values.")
-	fields = (
-					('triggers', 'Array<String>', 'Array'),
-					('hidden', 'Boolean'),
+	fields =  MissionCondition.fields + (
 					('item', 'String', ) ,
 				)
 	def __init__(self, item=None, **kwargs ):
@@ -217,9 +213,7 @@ class TimeDeltaCondition( MissionCondition ):
 	help_text= _(u"TimeDeltaCondition is a basic condition that compare two dates using a time delta. "
 						u"The condition is considered fulfilled if the date from the context match the following expression : "
 						u"condition date - context date <i>operator</i> time delta.")
-	fields = (
-					('triggers', 'Array<String>', 'Array' ),
-					('hidden', 'Boolean', ),
+	fields =  MissionCondition.fields + (
 					('delta', 'aesia.com.mon.utils::TimeDelta', 'timeDelta'), 
 					('comparison', 'String', 'String(==,!=,<,<=,>,>=)' ) ,
 				)
@@ -304,9 +298,7 @@ class DateCondition(MissionCondition):
 	help_text= _(u"DateCondition is a basic condition that compare two dates. "
 						u"The condition is considered fulfilled if the date from the context match the following expression : "
 						u"context date <i>operator</i> condition date.")
-	fields = (
-					('triggers', 'Array<String>', 'Array' ),
-					('hidden', 'Boolean', ),
+	fields =  MissionCondition.fields +  (
 					('comparison', 'String', 'String(==,!=,<,<=,>,>=)' ) ,
 				)
 	def __init__(self, comparison="==", **kwargs ):
@@ -385,9 +377,7 @@ class MissionRequiredCondition( ItemInListCondition ):
 	"""
 	help_text=_(u"MissionRequiredCondition is a condition that is considered fulfilled when the player complete a specific mission. "
 					   u"This condition is generally used as a preconditions to build a missions tree.")
-	fields = (
-					('triggers', 'Array<String>', 'Array'),
-					('hidden', 'Boolean'),
+	fields =  MissionCondition.fields + (
 					('item', 'String', ) ,
 				)
 	
@@ -427,9 +417,7 @@ class TimeBombCondition( DateCondition ):
 	"""
 	help_text=_(u"TimeBombCondition is a condition that check the current date against a specific date. "
 					   u"By default, the condition date is the current date.")
-	fields = (
-					('triggers', 'Array<String>', 'Array' ),
-					('hidden', 'Boolean', ),
+	fields =  MissionCondition.fields + (
 					('date', 'Date' ), 
 					('comparison', 'String', 'String(==,!=,<,<=,>,>=)' ) ,
 				)

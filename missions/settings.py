@@ -17,6 +17,8 @@ MISSION_RESULTS_PROCESSOR = getattr( settings, "MISSION_RESULTS_PROCESSOR", "abe
 MISSION_RESPONSE_PROCESSOR = getattr( settings, "MISSION_RESPONSE_PROCESSOR", "abe.missions.middleware.default_mission_response_processor" )
 MISSION_CONTEXT_PROCESSOR = getattr( settings, "MISSION_CONTEXT_PROCESSOR", "abe.missions.middleware.default_mission_context_processor" )
 
+MISSION_TRIGGERS_LIST =  getattr( settings, "MISSION_TRIGGERS_LIST", "" )
+
 MISSION_CONDITIONS_LIST = getattr( settings, "MISSION_CONDITIONS_LIST", (
 																														 "abe.missions.conditions.MissionCondition",
 																														 
