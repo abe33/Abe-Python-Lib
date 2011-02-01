@@ -100,6 +100,14 @@ def get_page_description_meta( request ):
 		if len(t) == 2 :
 			r = re.compile( t[0] )
 			d = t[1]
+			
+			try :
+				c = get_definition_with_path(d)
+				if c is not None :
+					d = c
+			except:
+				pass
+			
 			res = r.search( path )
 			if res is not None :
 				if callable(d):

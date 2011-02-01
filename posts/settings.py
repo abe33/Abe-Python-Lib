@@ -11,7 +11,7 @@ def default_post_page_meta_description_processor ( results ):
 									  Q(published_date__month=results.group('month')),
 									  Q(published_date__day=results.group('day')),
 									  Q(slug=results.group('slug')) )
-	if p : 
+	if p is not None : 
 		return remove_html_tags(p.content_or_excerpt())[:50]
 	else:
 		return DEFAULT_META_DESCRIPTION
@@ -24,5 +24,5 @@ URLS_META_DESCRIPTION =  getattr( settings,
 														 "URLS_META_DESCRIPTION",
 														 (
 															("^/site/$", _(u"Welcome on the homepage of this site." ) ), 
-															("post/(?P<year>\d{4})/(?P<month>\d{1,2})/(?P<day>\d{1,2})/(?P<slug>[\w_-]+)/$", default_post_page_meta_description_processor ), 
+															("^/site/post/(?P<year>\d{4})/(?P<month>\d{1,2})/(?P<day>\d{1,2})/(?P<slug>[\w_-]+)/$", "abe.posts.settings.default_post_page_meta_description_processor" ), 
 														 ))
