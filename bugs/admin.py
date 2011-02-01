@@ -48,7 +48,10 @@ class TicketAdmin(admin.ModelAdmin):
 				)
 
 	def pain_percent (self, obj):
-		return u'%.1f%%' % obj.pain
+		if isinstance(obj.pain, (int, long, float, complex)):
+			return u'%.1f%%' % obj.pain
+		else:
+			return _(u"Pain not defined")
 	pain_percent.short_description = _(u"User Pain")
 
 	def save_model(self, request, obj, form, change):
