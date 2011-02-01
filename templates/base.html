@@ -1,39 +1,42 @@
 {% load i18n posts tickets missions %}
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en"><head>
-		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 		<title>{% block title %}{{page_title}}{% endblock %}</title>
 		
-		{% block extralinks %}{% endblock %}
+		{% block meta %}
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		{% get_page_description_meta request %}
+		{% endblock %}
+		
+		{% block links %}
 		<!--<link rel="shortcut icon" href="../graphics/jplayer.ico" type="image/x-icon" />-->
-		
-		
-		<!-- IE Fixes for CSS and HTML5 entities-->
-		<!--[if lt IE 9]>
-		<script src="http://ie7-js.googlecode.com/svn/version/2.1(beta4)/IE9.js"></script>
-		<![endif]-->
-		
-		<!--[if lte IE 8]>
-		<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-		<![endif]-->
-		<script src="{{ MEDIA_URL }}js/jquery-1.4.2.min.js"></script>
+		{% endblock %}
 
-        <script type="text/javascript">
-		<!--
-			window.media = "{{ MEDIA_URL }}";
-		-->
-		</script>
-		 
-		{% block extrascript %}{% endblock %}
-		
-		<link href='http://fonts.googleapis.com/css?family=Cantarell:regular,italic,bold,bolditalic&subset=latin' rel='stylesheet' type='text/css'>
-		<!--<link rel="stylesheet" href="{{ MEDIA_URL }}css/css_reset.css"/>-->
-		<link rel="stylesheet" href="{{ MEDIA_URL }}css/default.css"/>
-		<link rel="stylesheet" href="{{ MEDIA_URL }}posts/css/posts.css"/>
-		<link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}bugs/css/ticket_form.css" />
-		
-		{% block extrastyle %}{% endblock %}
+		{% block script %}
+			<!-- IE Fixes for CSS and HTML5 entities-->
+			<!--[if lt IE 9]>
+			<script src="http://ie7-js.googlecode.com/svn/version/2.1(beta4)/IE9.js"></script>
+			<![endif]-->
+			<!--[if lte IE 8]>
+			<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+			<![endif]-->
+			<script src="{{ MEDIA_URL }}js/jquery-1.4.2.min.js"></script>
+
+			<script type="text/javascript">
+			<!--
+				window.media = "{{ MEDIA_URL }}";
+			-->
+			</script>
+		{% endblock %}
+
+		{% block style %}
+			<link href='http://fonts.googleapis.com/css?family=Cantarell:regular,italic,bold,bolditalic&amp;subset=latin' rel='stylesheet' type='text/css'>
+			<link rel="stylesheet" href="{{ MEDIA_URL }}css/css_reset.css"/>
+			<link rel="stylesheet" href="{{ MEDIA_URL }}css/default.css"/>
+			<link rel="stylesheet" href="{{ MEDIA_URL }}posts/css/posts.css"/>
+			<link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}bugs/css/ticket_form.css" />
+		{% endblock %}
 
 	</head>
 	<body>
@@ -57,9 +60,7 @@
 		</div>
 		
 		<div id="footer">
-			<footer>{% block footer %}{% endblock %}
-			{% render_ajax_ticket_form request %}
-			</footer>
+			<footer>{% block footer %}{% render_ajax_ticket_form request %}{% endblock %}</footer>
 		</div>
 </body>
 </html>

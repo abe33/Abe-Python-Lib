@@ -7,7 +7,9 @@ from django import template
 from django.contrib.comments.models import Comment
 
 from abe.posts.models import *
+from abe.posts import settings as msettings
 from abe.utils import *
+
 from tagging.models import *
 
 import hashlib
@@ -83,12 +85,29 @@ def render_categories_list():
 	objects = PostCategory.objects.all()
 	s = '<ul>'
 	for o in objects :  
-		s += '<li>%s</li>' % o.name
+		s += '<li><a href="%s">%s</a></li>' % ( o.get_absolute_url(), o.name )
 	s += '</ul>'
 	return s
 
 def get_gravatar_md5 ( mail ):
 	return hashlib.md5( mail.strip() ).hexdigest()
+
+def get_page_description_meta( request ):
+	l = msettings.URLS_META_DESCRIPTION
+	path = request.META["PATH_INFO"]
+	desc = msettings.DEFAULT_META_DESCRIPTION
+	for t in l:
+		if len(t) == 2 :
+			r = re.compile( t[0] )
+			d = t[1]
+			res = r.search( path )
+			if res is not None :
+				if callable(d):
+					desc = d(res)
+				else:
+					desc = d
+	
+	return '<meta name="description" content="%s"/>' % desc
 
 render_post = register.inclusion_tag("posts/post_view.html")(render_post)
 render_post_with_id = register.inclusion_tag("posts/post_view.html")(render_post_with_id)
@@ -96,6 +115,7 @@ render_orphan = register.inclusion_tag("posts/orphan_view.html")(render_orphan)
 
 register.simple_tag( get_gravatar_md5 )
 register.simple_tag( render_categories_list )
+register.simple_tag( get_page_description_meta )
 register.tag( get_post )
 register.tag( get_post_by_comment_id )
 register.tag( get_post_category_list )

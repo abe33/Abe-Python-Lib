@@ -10,12 +10,9 @@ from django.db.models import Q, Count
 from tagging.models import *
 
 from abe.posts.models import *
-from abe.missions.decorators import  *
+from abe.posts import settings as msettings
 import math
 import re
-
-num_post_per_page = "4"
-start_page = "1"
 
 def normalize_query(query_string,
                     findterms=re.compile(r'"([^"]+)"|(\S+)').findall,
@@ -57,8 +54,8 @@ def post_list_generic (   request,
 										next_page_view="", 
 										rss_page_view="", 
 										pages_args=None, 
-										page_index=start_page, 
-										num=num_post_per_page ):
+										page_index=msettings.START_PAGE, 
+										num=msettings.NUM_POST_PER_PAGE ):
 	if len( posts_list ) == 0:
 		return render_to_response( "posts/post_list.html", 
 												{
@@ -114,21 +111,23 @@ def page_not_found( request ):
 
 @login_required
 def post_preview ( request,  id ): 
+	p = Post.objects.get(id=id),
 	return render_to_response( "posts/post_details.html", 
 												{
 													'id':id, 
-													'page_title':_(u'Post')
+													'page_title':_(u'Post - %s') % p.name, 
 												}, 
 												RequestContext( request ) )
 
 def post_details( request, year,  month,  day,  slug):
-			return render_to_response( "posts/post_details.html", 
+	p = Post.objects.get( Q(published_date__year=year),
+									  Q(published_date__month=month),
+									  Q(published_date__day=day),
+									  Q(slug=slug) )
+	return render_to_response( "posts/post_details.html", 
 														{
-															'post':Post.objects.get( Q(published_date__year=year),
-																								  Q(published_date__month=month),
-																								  Q(published_date__day=day),
-																								  Q(slug=slug) ), 
-															'page_title':_(u'Post')
+															'post':p, 
+															'page_title':_(u'Post - %s') % p.name, 
 														}, 
 														RequestContext( request ) )
 
@@ -141,7 +140,7 @@ def orphan_page( request, orphan_id ):
 												}, 
 												RequestContext( request ) )
 
-def post_list( request, page=start_page,  num=num_post_per_page ):
+def post_list( request, page=msettings.START_PAGE,  num=msettings.NUM_POST_PER_PAGE ):
 	return post_list_generic( request,  
 										   Post.objects.filter(published=True, orphan=False).order_by("-published_date"), 
 										   _(u"News"), 
@@ -151,7 +150,7 @@ def post_list( request, page=start_page,  num=num_post_per_page ):
 										   page, 
 										   num )
 
-def post_by_tag ( request,  tag, page=start_page,  num=num_post_per_page ):
+def post_by_tag ( request,  tag, page=msettings.START_PAGE,  num=msettings.NUM_POST_PER_PAGE ):
 	 return post_list_generic(	request,  
 											Post.objects.filter(published=True, orphan=False,  tags__contains=tag).order_by("-published_date"), 
 											(u"Tag : %s") % tag , 
@@ -163,7 +162,7 @@ def post_by_tag ( request,  tag, page=start_page,  num=num_post_per_page ):
 											page, 
 											num )
 
-def post_by_category( request,  category, page=start_page,  num=num_post_per_page ):
+def post_by_category( request,  category, page=msettings.START_PAGE,  num=msettings.NUM_POST_PER_PAGE ):
 	return post_list_generic( request,  
 										   Post.objects.filter(published=True, orphan=False,  category__name=category).order_by("-published_date"), 
 										   _(u"Category : %s") % category , 
@@ -175,10 +174,10 @@ def post_by_category( request,  category, page=start_page,  num=num_post_per_pag
 										   page, 
 										   num )
 
-def post_by_year( request,  year, page=start_page,  num=num_post_per_page ):
+def post_by_year( request,  year, page=msettings.START_PAGE,  num=msettings.NUM_POST_PER_PAGE ):
 	return post_list_generic( request,  
 										   Post.objects.filter(published=True, orphan=False,  published_date__year=year).order_by("-published_date"), 
-										   _(u"Posts for year %s") % year, 
+										   _(u"Posts for %s") % year, 
 										   "post_by_year_archive", 
 										   None, 
 										   {
@@ -187,10 +186,10 @@ def post_by_year( request,  year, page=start_page,  num=num_post_per_page ):
 										   page, 
 										   num )
 
-def post_by_month( request,  year,  month, page=start_page,  num=num_post_per_page ):
+def post_by_month( request,  year,  month, page=msettings.START_PAGE,  num=msettings.NUM_POST_PER_PAGE ):
 	return post_list_generic( request,  
 										   Post.objects.filter(published=True, orphan=False, published_date__year=year, published_date__month=month).order_by("-published_date"), 
-										   _(u"Posts for month %s of year %s") % ( month, year ), 
+										   _(u"Posts for the %s %s") % ( month, year ), 
 										   "post_by_month_archive", 
 										   None, 
 										   {

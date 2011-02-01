@@ -105,6 +105,10 @@ def every_in_list( a, b ):
 			return False
 	return True
 
+def remove_html_tags(data):
+	p = re.compile(r'<.*?>|\s\s+')
+	return p.sub('', data)
+
 def datetime_from_string( s ):
 	"""
 	Create datetime object representing date/time
