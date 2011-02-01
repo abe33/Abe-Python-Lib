@@ -6,13 +6,15 @@ from django.db.models import Q
 from abe.posts.models import *
 from abe.utils import *
 
+MAX_CHARS_FOR_META_DESCRIPTION =  getattr( settings, "MAX_CHARS_FOR_META_DESCRIPTION", 200 )
+
 def default_post_page_meta_description_processor ( results ):
 	p = Post.objects.get( Q(published_date__year=results.group('year')) ,
 									  Q(published_date__month=results.group('month')),
 									  Q(published_date__day=results.group('day')),
 									  Q(slug=results.group('slug')) )
 	if p is not None : 
-		return remove_html_tags(p.content_or_excerpt())[:50]
+		return remove_html_tags(p.content_or_excerpt())[:MAX_CHARS_FOR_META_DESCRIPTION]
 	else:
 		return DEFAULT_META_DESCRIPTION
 
