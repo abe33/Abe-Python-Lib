@@ -11,6 +11,8 @@ MISSION_NOTIFICATION_TOKEN = getattr( settings, "MISSION_NOTIFICATION_TOKEN", "[
 
 MISSION_MIDDLEWARE_INSTANCE=  None
 
+MISSION_MIDDLEWARE_DEBUG = getattr( settings, "MISSION_MIDDLEWARE_DEBUG", True )
+
 MISSION_DESCRIPTOR_CLASS = getattr( settings, "MISSION_DESCRIPTOR_CLASS", "abe.missions.models.MissionDescriptor" )
 
 MISSION_RESULTS_PROCESSOR = getattr( settings, "MISSION_RESULTS_PROCESSOR", "abe.missions.middleware.default_mission_results_processor" )

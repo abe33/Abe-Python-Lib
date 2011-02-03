@@ -1,9 +1,4 @@
 {% extends "bugs/tickets_base.html" %}
 {% load i18n tickets %}
 
-{% block toolbar %}
-{% endblock %}
-
-{% block content %} 
-{% render_ticket_form request ticket %}
-{% endblock %}
+{% block content %}{% render_ticket_form request ticket %}{% endblock %}

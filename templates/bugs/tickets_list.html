@@ -1,12 +1,6 @@
 {% extends "bugs/tickets_base.html" %}
 {% load i18n tickets %}
 
-{% block extrastyle %}
-<link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}bugs/css/pain_colors.css" />
-<link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}bugs/css/tickets_list.css" />
-<link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}bugs/css/ticket_form.css" />
-{% endblock %}
-
 {%block toolbar%}
 <li><a href="{{ new_url }}" class="add">{% trans 'New ticket' %}</a></li>
  
@@ -29,4 +23,4 @@
 </div>
 {% endif %}
 
-{% endblock content %}
+{% endblock %}

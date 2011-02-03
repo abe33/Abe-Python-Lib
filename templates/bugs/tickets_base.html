@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 {% load i18n tickets %}
-{% block extrastyle %}
+
+{% block style %}
+{{ block.super }}
 <link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}bugs/css/pain_colors.css" />
 <link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}bugs/css/tickets_list.css" />
 <link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}bugs/css/ticket_form.css" />
@@ -9,7 +11,6 @@
 {% endblock %}
 
 {% block content_header %}
-
 <a name="top"></a>
 
 {% milestone_header milestone component %}
@@ -23,7 +24,6 @@
 <h3>{% trans "My tickets" %}</h3>
 </div>
 {% render_user_tickets_table user %}
-
 
 <div id="ticket_tools" class="toolbar">
 <span class="legend">

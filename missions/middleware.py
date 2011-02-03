@@ -223,13 +223,16 @@ class MissionMiddleware():
 			mission_data = actives.get_mission_data( m )
 			validity = m.check_validity( context, mission_data )
 #			print "checking validity of mission %s with data %s and results %s" % (m, str(mission_data), str(validity))
+			if msettings.MISSION_MIDDLEWARE_DEBUG : 
+				print "%s validy check : %s" % ( m, validity )
 			if validity["fulfilled"] :
 				to_pop.append( n )
 				elligibles.append( m )
 				response_data['deactivated'].append( m )
 			else:
 				data = m.check_completion( context, mission_data )
-#				print data
+				if msettings.MISSION_MIDDLEWARE_DEBUG : 
+					print "%s completion check : %s" % ( m, validity )
 				#perform changes due to completed active missions
 				# no list for the mission == no failed condition == success
 				if data["fulfilled"] : 
@@ -270,6 +273,8 @@ class MissionMiddleware():
 			#an available mission can be deactivated as well
 			mission_data = availables.get_mission_data( m )
 			validity = m.check_validity( context, mission_data )
+			if msettings.MISSION_MIDDLEWARE_DEBUG : 
+				print "%s validy check : %s" % ( m, validity )
 			if validity["fulfilled"] :
 				to_pop.append( n )
 				elligibles.append( m )
@@ -285,8 +290,9 @@ class MissionMiddleware():
 	
 		for m in elligibles :
 			data = m.check_availability( context, elligibles.get_mission_data( m ) )
-#			print data
-			
+			if msettings.MISSION_MIDDLEWARE_DEBUG : 
+				print "%s avaibility check : %s" % ( m, data )
+
 			#perform changes due to available elligible missions
 			# no list for the mission == no failed condition == success
 			if data["fulfilled"] : 
