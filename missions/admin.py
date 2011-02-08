@@ -7,12 +7,12 @@ from django.utils.translation import ugettext as _
 from abe.missions.models import *
 
 class MissionAdmin(admin.ModelAdmin):
-	list_display=("__unicode__", "active" )
+	list_display=("__unicode__", "enabled",  )
 	list_display_links = ('__unicode__', )
 	fieldsets = [
-		( 'General',	{'fields': ['name', 'active'] }),
+		( 'General',	{'fields': ['name', 'enabled', 'auto_activate'] }),
 		( 'Conditions', {'fields':[ 'pre_conditions', 'conditions', 'validity_conditions' ] }), 
-		( 'Rewards',	{'fields': ['rewards', ] }),
+		( 'Rewards',	{'fields': ['rewards', 'failure_rewards'] }),
 	]
 
 class MissionProfileAdmin(admin.ModelAdmin):

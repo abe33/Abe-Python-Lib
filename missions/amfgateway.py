@@ -75,22 +75,19 @@ def mission_remove( request, mission ):
 
 #@login_required
 def mission_update( request, mission, change_list ):
-#	print "mission_update"
 	m = instance_from_type_instance( mission )
-#	print "mission = %s" % m
 	bool = False
 	for k in change_list:
 		if k in ["pre_conditions",  "conditions", "validity_conditions"]:
-#			print k
 			l = MissionConditionList( [ instance_from_type_instance( o ) for o in mission.data[k] ] )
 			setattr( m, k, l )
 			bool = True
-		elif k == "rewards" :
+		elif k in ["rewards",  "failure_rewards"] :
 			l =  [ instance_from_type_instance( o ) for o in mission.data[k] ] 
 			setattr( m,  k, l )
 			bool = True
 		else :
-			setattr( m,  k, mission.data[k] )
+			setattr( m, k, mission.data[k] )
 			bool = True
 
 	if bool : 

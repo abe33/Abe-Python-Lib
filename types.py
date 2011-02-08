@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from abe.utils import *
+from django.utils.translation import ugettext as _
 
 import pyamf, re
 
@@ -106,28 +107,39 @@ def instance_from_type( type ):
 	else:
 		raise KeyError(_(u"The type property of the argument dict is mandatory."))
 
+def set_instance_datas( instance, data ):
+	for k in data : 
+		d =data[k]
+		if d is not None and type(d) is type( getattr( instance, k) ) : 
+			setattr( instance,  k, d )
+
+def check_data_type( data ):
+	d = {}
+	for k in data :
+		v = data[k]
+		if isinstance( v, TypeInstance ):
+			d[k] = instance_from_type_instance( v )
+		elif isinstance( v, list ) and len(v) > 0 and isinstance( v[0], TypeInstance ):
+			d[k] = [  instance_from_type_instance( o ) for o in v ]
+	return d
+
 def instance_from_type_instance( instance ):
-	print instance 
 	if isinstance( instance,  TypeInstance ) :
 		a = instance.type_name.split( "." )
 		cls = get_definition( "".join(a[-1:]), ".".join(a[:-1]))
-
+		data = check_data_type( instance.data )
+		
 		if instance.id is not None and issubclass( cls, models.Model ) : 
 			o = cls.objects.get(id=instance.id)
-			for k in instance.data : 
-				d = instance.data[k]
-				if d is not None and type(d) is type( getattr(o, k) ) : 
-					setattr(o,  k, d )
+			set_instance_datas( o , data )
 
 		elif issubclass( cls, models.Model ) :
 			o = cls()
-			for k in instance.data : 
-				d = instance.data[k]
-				if d is not None and type(d) is type( getattr(o, k) )  : 
-					setattr(o,  k, d )
+			set_instance_datas( o , data )
 
 		else:
-			o = cls( **instance.data )
+			o = cls( ** data )
+
 		return o
 	else:
 		raise ValueError(_(u"The argument must be a valid TypeInstance object."))

@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from django.core.serializers.json import DjangoJSONEncoder
-from django.utils import simplejson as json
 from django.utils.translation import ugettext as _
 
 from abe.missions import settings as msettings
@@ -10,36 +8,6 @@ from abe.types import *
 from datetime import *
 
 import operator
-
-def convert_to_builtin_type(obj):
-	# Convert objects to a dictionary of their representation
-	d = { '__class__':obj.__class__.__name__, 
-		  '__module__':obj.__module__,
-		  }
-	d.update(obj.__dict__)
-	return d
-	
-def dict_to_object(  d ):
-	if '__class__' in d:
-		class_name = d.pop('__class__')
-		module_name = d.pop('__module__')
-		class_ = get_definition( class_name, module_name )
-		args = dict( (key.encode('ascii'), value) for key, value in d.items())
-		inst = class_(**args)
-	else:
-		inst = d
-	return inst
-
-def json_dumps( data ):
-	try:
-		d = json.dumps(data, cls=DjangoJSONEncoder )
-		return d
-	except TypeError, err:
-		d = json.dumps( data, default=convert_to_builtin_type, cls=DjangoJSONEncoder )
-		return d
-
-def json_loads( data ):
-	return json.loads( data, object_hook=dict_to_object)
 
 class MissionConditionMetaClass(type):
 
@@ -103,6 +71,41 @@ class MissionCondition():
 	
 	def to_vo(self):
 		return TypeInstance( type(self).to_type(), self.get_prep_value_args() )
+
+class StringComparisonCondition(MissionCondition):
+	help_text=_( u"StringComparisonCondition compare the gender of the user agaisnt the specified value")
+	fields = MissionCondition.fields + (
+					('string', 'String',) 
+				)
+	def __init__(self, string="", **kwargs):
+		super( StringComparisonCondition, self ).__init__( **kwargs )
+		self.string = string
+
+	def get_test_value(self, context, past_state, mission_data ):
+		return ""
+
+	def perform_comparison(self, a, b ):
+		return a == b
+
+	def check(self, context, past_state, mission_data ):
+		test_value = self.get_test_value( context, past_state, mission_data )
+		res = self.perform_comparison( test_value, self.string )
+		if not res : 
+			return {
+							'fulfilled':False, 
+							'reason':_(u"The string '%s' don't match the target string '%s'") % ( test_value, self.string ), 
+							'user_string':str( test_value ), 
+							'against_string':str( self.string), 
+						}
+		else:
+			return {
+							'fulfilled':True, 
+							'user_string': str ( test_value ), 
+							'against_string':str( self.string), 
+						}
+
+	def get_prep_value_args(self):
+		return dict( super(StringComparisonCondition, self).get_prep_value_args(), **{'string' : self.string })
 
 class NumericComparisonCondition(MissionCondition):
 	"""A condition that checks two numerical values using a comparison operator
@@ -328,7 +331,7 @@ class DateCondition(MissionCondition):
 
 	def get_prep_value_args(self):
 		print type(self)
-		return dict( super( DateCondition, self  ).get_prep_value_args(), **{'date' : self.date, 'comparison':self.comparison})
+		return dict( super( DateCondition, self  ).get_prep_value_args(), **{'comparison':self.comparison})
 
 class TrueCondition(MissionCondition):
 	"""A fake condition which always return True.

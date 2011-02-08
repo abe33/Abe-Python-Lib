@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from django.core.serializers.json import DjangoJSONEncoder
+from django.utils import simplejson as json
 from django.db import models
 from django import template
 from django.conf import settings
@@ -17,56 +19,36 @@ import hashlib
 import re
 import pyamf
 
-class TimeDelta:
-	def __init__(self, delta=None, total_seconds=None ):
-		if delta is not None : 
-			self.total_seconds = ((delta.microseconds + (delta.seconds + delta.days * 24 * 3600) * 10**6) / 10**6 ) if delta is not None else 0
-		elif total_seconds is not None : 
-			self.total_seconds = total_seconds
-		else:
-			self.total_seconds = 0
 
-	class __amf__:
-		external = True
-		amf3 = True
-
-	def __writeamf__(self, output):
-		output.writeInt( int( self.total_seconds * 1000 ) )
-
-	def __readamf__(self, input):
-#		print "read amf for timedelta"
-		sec = input.readInt() 
-#		print "delta sec"
-		self.total_seconds = sec / 1000
+def convert_to_builtin_type(obj):
+	# Convert objects to a dictionary of their representation
+	d = { '__class__':obj.__class__.__name__, 
+		  '__module__':obj.__module__,
+		  }
+	d.update(obj.__dict__)
+	return d
 	
-	def to_timedelta(self):
-		return timedelta(seconds=self.total_seconds)
+def dict_to_object(  d ):
+	if '__class__' in d:
+		class_name = d.pop('__class__')
+		module_name = d.pop('__module__')
+		class_ = get_definition( class_name, module_name )
+		args = dict( (key.encode('ascii'), value) for key, value in d.items())
+		inst = class_(**args)
+	else:
+		inst = d
+	return inst
 
-	def __repr__(self):
-		return str( self.to_timedelta() )
+def json_dumps( data ):
+	try:
+		d = json.dumps(data, cls=DjangoJSONEncoder )
+		return d
+	except TypeError, err:
+		d = json.dumps( data, default=convert_to_builtin_type, cls=DjangoJSONEncoder )
+		return d
 
-pyamf.register_class( TimeDelta, 'aesia.com.mon.utils.TimeDelta' )
-
-class TagFilterSpec(FilterSpec):
-	def __init__(self, f, request, params, model, model_admin, **kwargs ):
-		super( TagFilterSpec, self).__init__(f, request, params, model, model_admin)
-		self.lookup_kwarg = '%s__contains' % f.name
-		self.lookup_val = request.GET.get(self.lookup_kwarg, None)
-		self.objects = model.tags.split(" ")
-		#self.objects = model.objects.all()
-
-	def choices(self, cl):
-		yield {'selected': self.lookup_val is None,
-				   'query_string': cl.get_query_string({}, [self.lookup_kwarg]),
-				   'display': _('All')}
-
-		for tag in self.objects:
-			tag = tag.strip()
-			yield {'selected':tag == self.lookup_val,
-						'query_string': cl.get_query_string({self.lookup_kwarg: tag}),
-						'display': tag }
-
-FilterSpec.filter_specs.insert(0, (lambda f: isinstance(f, TagField), TagFilterSpec))
+def json_loads( data ):
+	return json.loads( data, object_hook=dict_to_object)
 
 def get_definition( name, path=None ):
 	if path is None or len(path)==0:
@@ -108,6 +90,43 @@ def every_in_list( a, b ):
 def remove_html_tags(data):
 	p = re.compile(r'<.*?>|\s\s+')
 	return p.sub('', data)
+
+def crossdomain(request, user=None):
+    return render_to_response(
+                'crossdomain.xml',
+                {
+                },
+                mimetype="application/xhtml+xml")
+
+class TimeDelta:
+	def __init__(self, delta=None, total_seconds=None ):
+		if delta is not None : 
+			self.total_seconds = ((delta.microseconds + (delta.seconds + delta.days * 24 * 3600) * 10**6) / 10**6 ) if delta is not None else 0
+		elif total_seconds is not None : 
+			self.total_seconds = total_seconds
+		else:
+			self.total_seconds = 0
+
+	class __amf__:
+		external = True
+		amf3 = True
+
+	def __writeamf__(self, output):
+		output.writeInt( int( self.total_seconds * 1000 ) )
+
+	def __readamf__(self, input):
+#		print "read amf for timedelta"
+		sec = input.readInt() 
+#		print "delta sec"
+		self.total_seconds = sec / 1000
+	
+	def to_timedelta(self):
+		return timedelta(seconds=self.total_seconds)
+
+	def __repr__(self):
+		return str( self.to_timedelta() )
+
+pyamf.register_class( TimeDelta, 'aesia.com.mon.utils.TimeDelta' )
 
 def datetime_from_string( s ):
 	"""
@@ -193,12 +212,26 @@ def timedelta_from_string( s ):
 	return timedelta(**dict(( (key, int(value))
 							  for key, value in d.items() )))
 
-def crossdomain(request, user=None):
-    return render_to_response(
-                'crossdomain.xml',
-                {
-                },
-                mimetype="application/xhtml+xml")
+class TagFilterSpec(FilterSpec):
+	def __init__(self, f, request, params, model, model_admin, **kwargs ):
+		super( TagFilterSpec, self).__init__(f, request, params, model, model_admin)
+		self.lookup_kwarg = '%s__contains' % f.name
+		self.lookup_val = request.GET.get(self.lookup_kwarg, None)
+		self.objects = model.tags.split(" ")
+		#self.objects = model.objects.all()
+
+	def choices(self, cl):
+		yield {'selected': self.lookup_val is None,
+				   'query_string': cl.get_query_string({}, [self.lookup_kwarg]),
+				   'display': _('All')}
+
+		for tag in self.objects:
+			tag = tag.strip()
+			yield {'selected':tag == self.lookup_val,
+						'query_string': cl.get_query_string({self.lookup_kwarg: tag}),
+						'display': tag }
+
+FilterSpec.filter_specs.insert(0, (lambda f: isinstance(f, TagField), TagFilterSpec))
 
 class BaseTemplateNode(template.Node):
 	def handle_token(cls, parser, token):

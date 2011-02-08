@@ -8,74 +8,12 @@ from abe.utils import *
 from abe.missions.models import *
 from abe.missions.conditions import *
 from abe.missions.rewards import *
+from abe.missions.utils import *
 
 from datetime import *
 
 import pprint
-
 pp = pprint.PrettyPrinter(indent=4)
-
-def get_user_mission_profile( request ):
-	user = request.user
-	try :
-		profile = MissionProfile.objects.get(user=user) 
-	except :
-		profile = msettings.MISSION_MIDDLEWARE_INSTANCE.init_user_missions_profile( user )
-		processor = get_definition_with_path( msettings.MISSION_CONTEXT_PROCESSOR )
-		context = processor( request )
-		msettings.MISSION_MIDDLEWARE_INSTANCE.check_user_missions( context )
-	return profile
-
-def is_valid_minimal_context( context ):
-	"""Verify that a context dict is wellformed and raise errors if it's not the case."""
-	if "profile" not in context :
-		raise KeyError( _(u"The provided context don't have any entry with the key 'profile'. The profile is mandatory") )
-	elif "user" not in context :
-		raise KeyError( _(u"The provided context don't have any entry with the key 'user'. The user is mandatory") )
-	elif not isinstance( context["profile"], MissionProfile ) :
-		raise ValueError( _(u"The provided profile is not an instance of the MissionProfile model.") )
-	elif isinstance( context["user"],  AnonymousUser ):
-		raise ValueError( _(u"The user in the context object must be a valid User, not an AnonymousUser.") )
-
-def default_mission_results_processor( profile, results ):
-	""" This function is used to handle the results of the missions check. By default 
-	this function look for completed missions and then call the affect_reward on each
-	rewards of each missions.
-	"""
-	for m in results["done"]:
-		if m.rewards is not None :  
-			for r in m.rewards :
-				r.affect_reward()
-
-def default_mission_response_processor( request, response, response_data ):
-	"""Handle the process of notifying the missions changes in the view response. A
-	token can be inserted in your template and then replace it by the concret notification
-	when changes occurs.
-	"""
-	response.response.content = response.response.content.replace( msettings.MISSION_NOTIFICATION_TOKEN, str( response_data ) )
-
-def default_mission_context_processor( request ):
-	"""Default context processor for the mission middleware checking context.
-	A minimal context must contains a user and profile fields with respectively
-	the target user and its associated MissionProfile.
-	"""
-	print "default_mission_context_processor"
-	user = request.user
-	profile = get_user_mission_profile( request )
-	return {'user': user,  'profile':profile, 'request':request }
-
-def activate_mission( request, mission ):
-	processor = get_definition_with_path( msettings.MISSION_CONTEXT_PROCESSOR )
-	context = processor( request )
-	profile = context["profile"]
-
-	if mission in profile.missions_available : 
-		profile.missions_available.pop( profile.missions_available.index( mission ) )
-		profile.missions_active.append(mission)
-		msettings.MISSION_MIDDLEWARE_INSTANCE.check_user_missions ( context )
-	else : 
-		raise ValueError(_("You cannot activate a mission which is not in the available missions list."))
-	pass
 
 class MissionTriggerResponse( HttpResponse ):
 	""" The MissionTriggerResponse is used as a wrapper for
@@ -120,13 +58,13 @@ class MissionMiddleware():
 
 	def update_missions_map(self):
 		""" Update the missions list stored by the middleware. 
-		The missions list contains only active missions.
+		The missions list contains only enabled missions.
 		At the same time, the function construct the default
 		available missions list which contains only missions without
 		any preconditions of type MissionRequiredCondition.
 		"""
 		map = {}
-		missions = Mission.objects.filter ( active=True)
+		missions = Mission.objects.filter ( enabled=True)
 		
 		for mission in missions:
 			map[ str ( mission.id ) ] = mission
@@ -148,7 +86,7 @@ class MissionMiddleware():
 			if m in exclusion_list :
 				continue
 			elif m not in profile.missions_elligible:
-				if MissionRequiredCondition not in m.pre_conditions : 
+				if m.pre_conditions  is not None and MissionRequiredCondition not in m.pre_conditions : 
 					profile.missions_elligible.append( m )
 				else : 
 					for mission in l : 
@@ -212,7 +150,7 @@ class MissionMiddleware():
 		availables = profile.missions_available
 		actives = profile.missions_active
 		dones = profile.missions_done
-		response_data = {'available':[], 'elligible':[], 'active':[], 'done':[], 'deactivated':[] }
+		response_data = {'available':[], 'elligible':[], 'active':[], 'done':[], 'deactivated':[],  'failed':[] }
 
 		#check active missions
 		to_pop = []
@@ -228,7 +166,7 @@ class MissionMiddleware():
 			if validity["fulfilled"] :
 				to_pop.append( n )
 				elligibles.append( m )
-				response_data['deactivated'].append( m )
+				response_data['failed'].append( m )
 			else:
 				data = m.check_completion( context, mission_data )
 				if msettings.MISSION_MIDDLEWARE_DEBUG : 
@@ -279,6 +217,11 @@ class MissionMiddleware():
 				to_pop.append( n )
 				elligibles.append( m )
 				response_data['deactivated'].append( m )
+			elif m.auto_activate :
+				to_pop.append( n )
+				actives.append( m )
+				response_data['active'].append( m )
+			
 			n+=1
 		
 		for n in to_pop :
@@ -321,14 +264,32 @@ class MissionMiddleware():
 		for n in to_pop :
 			elligibles.pop( n )
 		#save 
-		profile.save()
-		
-		print response_data
+	
+		if msettings.MISSION_MIDDLEWARE_DEBUG : 
+			print response_data
 		
 		processor = get_definition_with_path( msettings.MISSION_RESULTS_PROCESSOR )
-		processor( profile, response_data )
+		processor( context, response_data )
 		
+		profile.save()
 		return response_data
+	
+	def check_user_temporary_rewards(self, request ):
+		processor = get_definition_with_path( msettings.MISSION_CONTEXT_PROCESSOR )
+		context = processor( request )
+		
+		profile = context["profile"]
+		l = profile.temporary_rewards[:]
+		n = 0
+		for t in l : 
+			c = t[2]
+			d = c.check_reward_conditions( context )
+			if d["fulfilled"] :
+				c.remove_reward( context )
+				profile.temporary_rewards.pop( n )
+			n+= 1
+		
+		profile.save()
 
 	def process_request( self, request):
 		return None
@@ -349,6 +310,8 @@ class MissionMiddleware():
 		which is in charge of handle the notification of the changes in the mission
 		profile.
 		"""
+#		self.check_user_temporary_rewards( request )
+		
 		if not isinstance( response, MissionTriggerResponse):
 			response.content = response.content.replace( msettings.MISSION_NOTIFICATION_TOKEN, "")
 			return response

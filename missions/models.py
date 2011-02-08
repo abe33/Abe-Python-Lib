@@ -8,6 +8,7 @@ from datetime import datetime
 
 from abe.missions.conditions import *
 from abe.missions.rewards import *
+from abe.missions import utils as mutils
 from abe.missions import settings as msettings
 from abe.utils import *
 from abe.types import *
@@ -114,12 +115,21 @@ class Mission(models.Model):
 	conditions -- A list of conditions the user have to fulfill to complete this mission.
 	validity_conditions -- A list of conditions that make the mission unavailable to the user when fulfilled.
 	rewards -- A list of MissionReward objects that the user will gain after having completed this mission.
-	active -- A boolean value indicate whether this mission is active or not. An inactive mission is not registerered by the MissionMiddleware instance.
+	enabled -- A boolean value indicate whether this mission is enabled or not. An inactive mission is not registerered by the MissionMiddleware instance.
 	"""
 	
-	name = models.CharField(_(u"Name"),  max_length=50)
-	active = models.BooleanField(_(u"Active"), default=False )
-
+	name = models.CharField(_(u"Name"),  max_length=50,  
+											help_text=_(u"The name of the mission is used as a default representation for the mission. "
+																u"For a more detailled way to describe a mission use a custom MissionDescriptor model."))
+	
+	enabled = models.BooleanField(_(u"Enabled"), default=False, blank=True,
+													 help_text=_(u"An enabled mission is a mission that is available for users.") )
+	
+	auto_activate = models.BooleanField(_(u"Auto Activate"), default=False, blank=True,
+																help_text=_(	u"An auto activable mission will automatically move from the "
+																					u"elligibles missions to the actives mission without needing "
+																					u"the user to activate it."))
+	
 	pre_conditions = MissionConditionsListField( _(u"Access Conditions"), blank=True, default="", 
 																		help_text=_(u"A list of conditions the user have "
 																							u"to fulfill to get access to this mission") )
@@ -135,18 +145,24 @@ class Mission(models.Model):
 																								u"temporary missions, like a mission which can be "
 																								u"only fulfilled on a specific date."))
 
-	rewards = MissionRewardsListField(_(u"Mission Rewards"), blank=True, default="", 
-														  help_text=_(u"A list of rewards the user gets "
-																			 u"when he complete the mission."))
+	rewards = MissionRewardsListField(_(u"Completion Rewards"), blank=True, default="", 
+														  help_text=_(u"A list of rewards the user gets when he complete the mission."))
+	
+	failure_rewards = MissionRewardsListField(_(u"Failure Rewards"), blank=True, default="", 
+														  help_text=_(u"A list of rewards the user gets when he fail to complete the mission. "
+																			 u"The mission is considered as failed when the validity conditions come true "
+																			 u"for an active mission."))
 	
 	help_text=_(u"A Mission object is defined by a set of conditions and rewards.")
 	fields = (
 					('name', 'String'), 
-					('active', 'Boolean'), 
-					('pre_conditions', 'Array<abe.missions.conditions.MissionCondition>', 'Array'), 
-					('conditions', 'Array<abe.missions.conditions.MissionCondition>', 'Array'), 
-					('validity_conditions', 'Array<abe.missions.conditions.MissionCondition>', 'Array'), 
-					('rewards', 'Array<abe.missions.rewards.MissionReward>', 'Array'), 
+					('enabled', 'Boolean'),
+					('auto_activate', 'Boolean'), 
+					('pre_conditions', 'Array<abe.missions.conditions.MissionCondition>', 'ConditionArray'), 
+					('conditions', 'Array<abe.missions.conditions.MissionCondition>', 'ConditionArray'), 
+					('validity_conditions', 'Array<abe.missions.conditions.MissionCondition>', 'ConditionArray'), 
+					('rewards', 'Array<abe.missions.rewards.MissionReward>', 'RewardArray'), 
+					('failure_rewards', 'Array<abe.missions.rewards.MissionReward>', 'RewardArray'), 
 				)
 	
 	def __init__(self, *args, **kwargs ):
@@ -154,43 +170,13 @@ class Mission(models.Model):
 		self.descriptor = None
 
 	def check_availability(self, context, past_states = None ):
-		return self.check_conditions( context, self.pre_conditions, past_states )
+		return mutils.check_conditions( context, self.pre_conditions, past_states )
 
 	def check_completion(self, context, past_states = None ):
-		return self.check_conditions( context, self.conditions, past_states, )
+		return mutils.check_conditions( context, self.conditions, past_states, )
 
 	def check_validity(self, context, past_states = None ):
-		return self.check_conditions( context, self.validity_conditions, past_states, )
-
-	def check_conditions(self, context, conditions, past_states = None ) :
-		if conditions is None or len( conditions ) == 0 : 
-			return {'fulfilled':False}
-
-		fulfilled = 0
-		datas = {}
-		for i, condition in enumerate( conditions ) : 
-			past_state = getattr( past_states, str(i), None )
-			if past_state is not None : 
-				if 'triggers' in context and not some_in_list( context["triggers"] , condition.triggers ): 
-					data = past_state
-				else:
-					data = self.check_condition( context, condition, past_state, past_states )
-			else:
-				data = self.check_condition( context, condition, past_state, past_states )
-
-			datas[ str(i) ] = data
-			if data['fulfilled'] :
-				fulfilled += 1
-		
-		if fulfilled == len(conditions) :
-			datas["fulfilled"] = True
-		else:
-			datas["fulfilled"] = False
-		
-		return datas
-
-	def check_condition( self, context, condition, past_state, mission_data ):
-		return condition.check( context, past_state, mission_data )
+		return mutils.check_conditions( context, self.validity_conditions, past_states, )
 
 	def __str__(self):
 		return "<Mission: %s>" % self.name
@@ -225,7 +211,9 @@ class Mission(models.Model):
 											'conditions':[ o.to_vo() for o in self.conditions ] if self.conditions is not None else [],
 											'validity_conditions':[ o.to_vo() for o in self.validity_conditions ] if self.validity_conditions is not None else [],
 											'rewards':[ o.to_vo() for o in self.rewards ] if self.rewards is not None else [],
-											'active':self.active, 
+											'failure_rewards':[ o.to_vo() for o in self.failure_rewards ] if self.failure_rewards is not None else [],
+											'enabled':self.enabled, 
+											'auto_activate':self.auto_activate, 
 										},
 										self.id )
 	
@@ -359,7 +347,7 @@ class MissionList(list):
 		return "<MissionList: %s>" % list.__str__(self)
 
 class MissionsListField( models.Field):
-	description = _(u"A list of MissionReward objects.")
+	description = _(u"A list of MissionList objects with data associated with them.")
 
 	__metaclass__ = models.SubfieldBase
 
@@ -395,28 +383,138 @@ class MissionsListField( models.Field):
 	def get_mission( self, value ):
 		return msettings.MISSION_MIDDLEWARE_INSTANCE.missions_map[ value ]
 
+class TempMissionRewardsList(list):
+	"""A list which contains temporary mission's rewards.
+	
+	Each entry is in fact a tuple with with for indices : 
+		0 -- the mission containing the reward
+		1 -- the property of the mission that contains the reward
+		2 -- the reward object
+	
+	# Create a mission and its rewards
+	>>> mission = Mission(id=1,name="A mission")
+	>>> tmp_reward = TemporaryMissionReward()
+	>>> mission.rewards = [ tmp_reward, MissionReward() ]
+	
+	# Create the list 
+	>>> tmp_rewards = TempMissionRewardsList()
+	>>> tmp_rewards.append_reward( mission, "rewards", mission.rewards[0] )
+	
+	# Performs tests
+	>>> tmp_rewards[0][2] == tmp_reward
+	True
+	>>> tmp_rewards[0][0] == mission
+	True
+	
+	"""
+	def append_reward(self, mission, property, reward ):
+		self.append( ( mission,  property, reward, ) )
+
+	def __str__(self):
+		return "<TempMissionRewardsList: %s>" % list.__str__(self)
+
+class TempMissionRewardsListField( models.Field):
+	""" A model's Field that handle TempMissionRewardsList objects and serialize/deserialize it
+	according to the model's fields behavior.
+	
+	# Create a test middleware
+	>>> from abe.missions.middleware import MissionMiddleware
+	>>> msettings.MISSION_MIDDLEWARE_INSTANCE = MissionMiddleware()
+	
+	# Create a mission and its rewards
+	>>> mission = Mission(id=1,name="A mission")
+	>>> msettings.MISSION_MIDDLEWARE_INSTANCE.missions_map[ mission.id ] = mission
+	>>> tmp_reward = TemporaryMissionReward()
+	>>> mission.rewards = [ tmp_reward, MissionReward() ]
+	
+	# Create the list 
+	>>> tmp_rewards = TempMissionRewardsList()
+	>>> tmp_rewards.append_reward( mission, "rewards", mission.rewards[0] )
+	
+	# Create the field 
+	>>> field= TempMissionRewardsListField()
+	
+	# Testing serialization
+	>>> str = field.get_prep_value( tmp_rewards )
+	>>> str
+	'1:rewards:0'
+	
+	# Testing deserialization
+	>>> nl = field.to_python( str )
+	>>> tuple = nl[0]
+	>>> tuple[0] == mission
+	True
+	>>> tuple[1]
+	'rewards'
+	>>> tuple[2] == tmp_reward
+	True
+	
+	"""
+	description = _(u"A list of TemporaryMissionReward objects.")
+
+	__metaclass__ = models.SubfieldBase
+
+	def get_internal_type(self):
+		return "TextField"
+
+	def to_python(self, value):
+		if value == "":
+			return TempMissionRewardsList()
+		elif not isinstance( value, basestring ):
+			return value
+		
+		missions_list = value.split( msettings.OBJECTS_LIST_SEPARATOR[:1] )
+		l = TempMissionRewardsList()
+		for s in missions_list :
+			a = s.split(":")
+			mission_id = a[0]
+			property = a[1]
+			condition_index = int(a[2])
+			m = self.get_mission( mission_id ) 
+			
+			l.append_reward( m, property, getattr( m, property ) [ condition_index ] )
+		return l
+
+	def get_prep_value(self, value):
+		if value is None :
+			return ""
+		return msettings.OBJECTS_LIST_SEPARATOR[:1].join( [ self.get_string( o ) for o in value] )
+
+	def get_string(self, rewards ):
+		m = rewards[0]
+		p = rewards[1]
+		c = rewards[2]
+		return "%s:%s:%s" % ( m.id, p, getattr ( m, p ).index( c ) ) 
+
+	def get_mission( self, value ):
+		return msettings.MISSION_MIDDLEWARE_INSTANCE.missions_map[ value ]
+
 class MissionProfile(models.Model):
-	# l'utilisateur cible
+	# the related user
 	user = models.ForeignKey( "auth.User", 
 											  related_name="mission_profile_user", 
 											  verbose_name=_(u"Related User"), 
 											  help_text=_(u"The user related to this profile.") )
-	# les missions terminées par le joueur
+	# missions completed by the user
 	missions_done = MissionsListField(_(u"Missions Done"), 
 													  help_text=_(u"A list of the missions completed by the user."), 
 													  default="" )
-	# les missions en cours du joueurs
+	# missions activated by the user but not yet completed
 	missions_active = MissionsListField(_(u"Active Missions"), 
 													  help_text=_(u"A list of the active missions of the user."), 
 													  default="")
-	# les missions accessible au joueur mais non entamées
+	# missions available to the user
 	missions_available = MissionsListField(_(u"Missions Available"), 
 													  help_text=_(u"A list of the missions available for the user but not yet activated."), 
 													  default="")
-	# les missions pouvant devenir accessible au joueur 
+	# missions tested by the middleware to detect when they become available
 	missions_elligible = MissionsListField(_(u"Missions elligible"), 
 													  help_text=_(u"A list of the missions that are not available to the user "
 																		 u"but should become available soon."), 
+													  default="")
+	# rewards that don't last ever are stored here until they end
+	temporary_rewards = TempMissionRewardsListField(_(u"Temporary Rewards"), 
+													  help_text=_(u"All the temporary rewards gained by the user."), 
 													  default="")
 
 	def __unicode__(self):
