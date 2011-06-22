@@ -2,22 +2,26 @@
 {% load i18n posts %}
 
 {% block content %}
-<h2>{{ page_title }}</h2>
-<div id="archives">
-    <table cellpadding="0" cellspacing="0" border="0">
-        <thead>
-            <tr><th></th><th>
-				<span class="post-count">{% blocktrans %}Total posts : {{total_count}}{% endblocktrans%}</span>
-			</th></tr>
-        </thead>
-        <tbody>
-    {% for o in archives_counts %}{% url post_by_month year=o.date.year month=o.date.month as month_url %}
-            <tr>
-                <td class="label"><a href="{{month_url }}" >{{ o.date|date:"b Y" }}</a></td>
-                <td><div  style="width:{{ o.ratio }}%;" class="post-bar">{{ o.count }}</div> </td>
-            </tr>
-    {% endfor %}
-      </tbody>
-    </table> 
-</div>
+<h3>{{ page_title }}</h3>
+<section>
+    <div id="archives">
+        <table cellpadding="0" cellspacing="0" border="0">
+            <header>
+                <thead>
+                    <tr><th></th><th>
+                        <span class="post-count">{% blocktrans %}Total posts : {{total_count}}{% endblocktrans%}</span>
+                    </th></tr>
+                </thead>
+            </header>
+            <tbody>
+        {% for o in archives_counts %}{% url post_by_month year=o.date.year month=o.date.month as month_url %}
+                <tr>
+                    <td class="label"><a href="{{month_url }}" title="{% trans 'See posts by date' %}">{{ o.date|date:"b Y" }}</a></td>
+                    <td><div style="width:{{ o.ratio }}%;" class="post-bar">{{ o.count }}</div> </td>
+                </tr>
+        {% endfor %}
+          </tbody>
+        </table> 
+    </div>
+</section>
 {% endblock %}

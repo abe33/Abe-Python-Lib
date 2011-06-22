@@ -1,58 +1,70 @@
 # -*- coding: utf-8 -*-
 from abe.posts.models import *
 from django.contrib import admin
-from django.conf import settings as locsettings
+from django.conf import settings
 from tagging.fields import TagField
 from django.utils.translation import ugettext as _
+from abe.posts import settings as post_settings
 
-class PostAdmin(admin.ModelAdmin):
-	list_display=( "name", "category", "allow_comments","comments_count", "published", "published_date", "tags", "slug", "orphan", "orphan_id", )
-	list_filter=("published", "published_date","category", "tags", )
-	search_fields = ("name", "tags", "category", )
-	list_display_links = ('name', 'slug', )
-	list_editable=("published","tags","allow_comments",  )
-	fieldsets = [
-		( _(u'Content'),               {'fields': ['name','excerpt', 'content', 'allow_comments'] }),
-		( _(u'Categorization'),   {'fields': ['category','tags'] }),
-		( _(u'Publication'),        {'fields': ['published','published_date'] }),
-		( _(u'Orphan page'),   {'fields': ['orphan','orphan_id'] }),
-	]
-	class Media:
-		css = {"all": ("%scss/admin_enhancements.css" % locsettings.MEDIA_URL,)}
-		js = (
-					"%sjs/jquery-1.4.2.min.js" % locsettings.MEDIA_URL,
-					"%sjs/ckeditor/ckeditor.js" % locsettings.MEDIA_URL,
-					"%sjs/admin_enhancements.js" % locsettings.MEDIA_URL,
-				)
+from babelfish.admin import BabelFishAdmin
 
-class PostCategoryAdmin(admin.ModelAdmin):
-	list_display=("name","creation_date", "update_date", )
-	list_display_links = ('name', )
-	fieldsets = [
-		( _(u'Content'),               {'fields': ['name',  'description', 'allow_comments'] }),
-	]
-	class Media:
-		css = {"all": ("%scss/admin_enhancements.css" % locsettings.MEDIA_URL,)}
-		js = (
-					"%sjs/jquery-1.4.2.min.js" % locsettings.MEDIA_URL,
-					"%sjs/ckeditor/ckeditor.js" % locsettings.MEDIA_URL,
-					"%sjs/admin_enhancements.js" % locsettings.MEDIA_URL,
-				)
+class PostAdmin(BabelFishAdmin):
+    list_display=( "name", "author", "category", 'group', 'group_order', "allow_comments","comments_count", "featured", "published", "published_date", "tags", "slug", "orphan", "orphan_id", )
+    list_filter=( "featured", "published", "published_date","category", "tags", )
+    search_fields = ("name", "tags", "category", )
+    list_display_links = ('name', 'slug', )
+    list_editable=("featured","published","tags","allow_comments",  )
+    fieldsets = [
+        ( _(u'Content'),       {'fields': ['name','excerpt', 'content'] }),
+        ( _(u'BabelFish'),     {'fields': ['bf_translations',] }),
+        ( _(u'Categorization'),{'fields': ['category','tags'] }),
+        ( _(u'Publication'),   {'fields': ['author','published','published_date', 'featured','allow_comments'] }),
+        ( _(u'Orphan page'),   {'fields': ['orphan','orphan_id'] }),
+        ( _(u'Post Group'),    {'fields': ['group','group_order'] }),
+    ]
+    class Media:
+        css = {"all": post_settings.POST_ADMIN_CSS + ( "%scss/post_enhancements.css" % settings.MEDIA_URL, )}
+        js = post_settings.POST_ADMIN_JS + ( "%sjs/post_enhancements.js" % settings.MEDIA_URL, )
 
-class SiteLinkAdmin(admin.ModelAdmin):
-	list_display=("name","creation_date", "update_date", )
-	list_display_links = ('name', )
-	fieldsets = [
-		( _(u'Content'),               {'fields': ['name',  'description', 'url', 'icon'] }),
-	]
-	class Media:
-		css = {"all": ("%scss/admin_enhancements.css" % locsettings.MEDIA_URL,)}
-		js = (
-					"%sjs/jquery-1.4.2.min.js" % locsettings.MEDIA_URL,
-					"%sjs/ckeditor/ckeditor.js" % locsettings.MEDIA_URL,
-					"%sjs/admin_enhancements.js" % locsettings.MEDIA_URL,
-				)
+class PostCategoryAdmin(BabelFishAdmin):
+    list_display=("name","slug","creation_date", "update_date", )
+    list_display_links = ('name', )
+    fieldsets = [
+        ( _(u'Content'),   {'fields': ['name', 'description'] }),
+        ( _(u'BabelFish'), {'fields': ['bf_translations',] }),
+        ( _(u'Extra'),   {'fields': [ 'slug','allow_comments'] }),
+    ]
+    class Media:
+        css = {"all": post_settings.POST_ADMIN_CSS + ( "%scss/post_enhancements.css" % settings.MEDIA_URL, )}
+        js = post_settings.POST_ADMIN_JS + ( "%sjs/post_enhancements.js" % settings.MEDIA_URL, )
+
+class PostGroupAdmin(BabelFishAdmin):
+    list_display=("name","slug" )
+    list_display_links = ('name', )
+    fieldsets = [
+        ( _(u'Content'),   {'fields': ['name', 'description'] }),
+        ( _(u'BabelFish'), {'fields': ['bf_translations',] }),
+        ( _(u'Extra'), {'fields': ['slug',] }),
+    ]
+    class Media:
+        css = {"all": post_settings.POST_ADMIN_CSS + ( "%scss/post_enhancements.css" % settings.MEDIA_URL, )}
+        js = post_settings.POST_ADMIN_JS + ( "%sjs/post_enhancements.js" % settings.MEDIA_URL, )
+
+class SiteLinkAdmin(BabelFishAdmin):
+    list_display=("name","creation_date", "update_date", 'featured', 'rel' )
+    list_display_links = ('name', )
+    list_filter=("featured", "rel", ) 
+    list_editable=("rel", 'featured', )
+    fieldsets = [
+        ( _(u'Content'),   {'fields': ['name','url','description', ] } ),
+        ( _(u'BabelFish'), {'fields': ['bf_translations',] }),
+        ( _(u'Extra'),     {'fields': ['icon','featured','rel',] } ),
+    ]
+    class Media:
+        css = {"all": post_settings.POST_ADMIN_CSS + ( "%scss/post_enhancements.css" % settings.MEDIA_URL, )}
+        js = post_settings.POST_ADMIN_JS + ( "%sjs/post_enhancements.js" % settings.MEDIA_URL, )
 
 admin.site.register(Post, PostAdmin )
+admin.site.register(PostGroup, PostGroupAdmin )
 admin.site.register(PostCategory, PostCategoryAdmin )
 admin.site.register(SiteLink, SiteLinkAdmin )

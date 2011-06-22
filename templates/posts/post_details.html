@@ -1,14 +1,15 @@
 {% extends 'base.html' %}
 {% load i18n tagging_tags comments posts %}
-
 {% block content %}
-<h2>{{ page_title }}</h2>
-<a href="{{rss_page_url}}" class="feed" title="{% trans "RSS feed for this page" %} {{page_title }}"><img src="{{ MEDIA_URL }}img/feed-icon-28x28.png" alt="{% trans "RSS feed for this page" %} {{page_title }}"></a>
-<div id="posts">
-<section>
-	{% if post.orphan %}{% render_orphan post %}
-	{% else %}{% render_post post %}{% endif %}
-	{% if post.allow_comments %}<div id="comment-form">{% block comment_form %}{% render_comment_form for post %}{% endblock %}</div>{% endif %}
-</section>
-</div>
+{% if post.orphan %}{% render_orphan post %}
+{% else %}{% render_post post %}{% endif %}
+{% if post.allow_comments %}
+	<div id="comments-bloc">
+	<section>
+	    {% get_comment_count for post as comment_count %}
+	    <h3>{% blocktrans count comment_count as counter %}{{ comment_count }} Comment{% plural %}{{ comment_count }} Comments{% endblocktrans %}</h3>
+	    {% render_comment_list for post %}</div>
+    </section>
+    <div id="comment-form">{% block comment_form %}{% render_comment_form for post %}{% endblock %}</div>
+{% endif %}
 {% endblock %}

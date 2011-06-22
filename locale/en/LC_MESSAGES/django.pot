@@ -1,0 +1,446 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2011-06-16 09:24-0500\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: settings_localhost.py:25
+msgid "English"
+msgstr ""
+
+#: settings_localhost.py:26
+msgid "French"
+msgstr ""
+
+#: types.py:108
+msgid "The type property of the argument dict is mandatory."
+msgstr ""
+
+#: types.py:145
+msgid "The argument must be a valid TypeInstance object."
+msgstr ""
+
+#: utils.py:260
+msgid "All"
+msgstr ""
+
+#: bugs/admin.py:44
+msgid "Properties"
+msgstr ""
+
+#: bugs/admin.py:45
+msgid "Context"
+msgstr ""
+
+#: bugs/admin.py:46
+msgid "Status"
+msgstr ""
+
+#: bugs/admin.py:47
+msgid "Team"
+msgstr ""
+
+#: bugs/admin.py:54
+msgid "Pain not defined"
+msgstr ""
+
+#: bugs/admin.py:55
+msgid "User Pain"
+msgstr ""
+
+#: bugs/feeds.py:9
+msgid "Latest tickets"
+msgstr ""
+
+#: bugs/models.py:26
+msgid "1 - Documentation - An issue in the documentation."
+msgstr ""
+
+#: bugs/models.py:27
+msgid "2 - Localization - An issue with the localization."
+msgstr ""
+
+#: bugs/models.py:28
+msgid "3 - GFX or SFX Polish - An aesthetic issue with graphics or sounds."
+msgstr ""
+
+#: bugs/models.py:29
+msgid ""
+"4 - Balance - Enables degenerate usage strategies that harm the experience."
+msgstr ""
+
+#: bugs/models.py:30
+msgid "5 - Minor ergonomy - Impairs usability in secondary scenarios."
+msgstr ""
+
+#: bugs/models.py:31
+msgid "6 - Major ergonomy - Impairs usability in key scenarios."
+msgstr ""
+
+#: bugs/models.py:32
+msgid ""
+"7 - Crash - Bug causes crash or data loss. Asserts in the Debug release."
+msgstr ""
+
+#: bugs/models.py:36
+msgid ""
+"1 - Nuisance - Not a big deal but noticeable. Extremely unlikely to affect "
+"sales."
+msgstr ""
+
+#: bugs/models.py:37
+msgid ""
+"2 - Minor pain - Users won’t like this once they notice it. A moderate "
+"number of users won’t buy."
+msgstr ""
+
+#: bugs/models.py:38
+msgid ""
+"3 - Medium pain - A User would likely not purchase the product. Will show up "
+"in review. Clearly a noticeable issue."
+msgstr ""
+
+#: bugs/models.py:39
+msgid ""
+"4 - Major pain - A User would return the product. Cannot RTM. The Team would "
+"hold the release for this bug."
+msgstr ""
+
+#: bugs/models.py:40
+msgid "5 - Critical - Blocking further progress on the daily build."
+msgstr ""
+
+#: bugs/models.py:44
+msgid "1 - Will affect almost no one."
+msgstr ""
+
+#: bugs/models.py:45
+msgid "2 - Will only affect a few users."
+msgstr ""
+
+#: bugs/models.py:46
+msgid "3 - Will affect average number of users."
+msgstr ""
+
+#: bugs/models.py:47
+msgid "4 - Will affect most users."
+msgstr ""
+
+#: bugs/models.py:48
+msgid "5 - Will affect all users."
+msgstr ""
+
+#: bugs/models.py:52
+msgid "Unconfirmed"
+msgstr ""
+
+#: bugs/models.py:53
+msgid "Confirmed"
+msgstr ""
+
+#: bugs/models.py:54
+msgid "Open"
+msgstr ""
+
+#: bugs/models.py:55
+msgid "Solved"
+msgstr ""
+
+#: bugs/models.py:56
+msgid "Unsolvable"
+msgstr ""
+
+#: bugs/models.py:89
+msgid "Milestone name"
+msgstr ""
+
+#: bugs/models.py:91 bugs/models.py:146 bugs/models.py:178
+msgid "Description"
+msgstr ""
+
+#: bugs/models.py:92
+msgid ""
+"The milestone description should notice the goal to achieve in this "
+"milestone, for instance the modules to implement."
+msgstr ""
+
+#: bugs/models.py:95
+msgid "Pain threshold"
+msgstr ""
+
+#: bugs/models.py:96
+msgid ""
+"The maximum pain level for this milestone. All tickets with a pain value "
+"above that limit have to be fixed before ending the milestone."
+msgstr ""
+
+#: bugs/models.py:99
+msgid "Public"
+msgstr ""
+
+#: bugs/models.py:100
+msgid ""
+"Does this milestone is available to users or is it an internal milestone."
+msgstr ""
+
+#: bugs/models.py:102 bugs/models.py:223
+msgid "Active"
+msgstr ""
+
+#: bugs/models.py:103
+msgid ""
+"Define in which milestone the process is currently in. Only one milestone "
+"can be active at one time, if you activate a milestone, the latest active "
+"milestone is deactivated."
+msgstr ""
+
+#: bugs/models.py:107 bugs/models.py:149 bugs/models.py:279
+msgid "Creation date"
+msgstr ""
+
+#: bugs/models.py:110 bugs/models.py:152 bugs/models.py:282
+msgid "Update date"
+msgstr ""
+
+#: bugs/models.py:136
+msgid "MileStone"
+msgstr ""
+
+#: bugs/models.py:137
+msgid "MileStones"
+msgstr ""
+
+#: bugs/models.py:145
+msgid "Component name"
+msgstr ""
+
+#: bugs/models.py:160 bugs/models.py:234
+msgid "Component"
+msgstr ""
+
+#: bugs/models.py:161
+msgid "Components"
+msgstr ""
+
+#: bugs/models.py:172
+msgid "Ticket title"
+msgstr ""
+
+#: bugs/models.py:174
+msgid ""
+"Try to give the most concise and accurate description of the bug such as : "
+"<br/><i>Enemies disappear while colliding with player.</i><br/><i>Results "
+"not saved at the end of the play.</i>"
+msgstr ""
+
+#: bugs/models.py:179
+msgid ""
+"Write here the full description of the bug. A good bug description contains "
+"the following elements :<ol><li>The steps which leads to the bugs, if they "
+"are known, else a description of the context in which the bug occurs.</"
+"li><li>The bugs consequences. What does happen to the program.</li><li>The "
+"expected result. How the program should behave in normal time.</li><li>A <a "
+"href='http://en.wikipedia.org/wiki/Workaround' rel='nofollow'>Workaround</a> "
+"if it is known.</li></ol>"
+msgstr ""
+
+#: bugs/models.py:187
+msgid "Tags"
+msgstr ""
+
+#: bugs/models.py:187
+msgid ""
+"Tags can be used to to group bugs by similarities, such as <code>memory "
+"leak</code>, <code>crash</code>, <code>killer</code>, etc..."
+msgstr ""
+
+#: bugs/models.py:191
+msgid "User Pain"
+msgstr ""
+
+#: bugs/models.py:196
+msgid "What type of bug is this?"
+msgstr ""
+
+#: bugs/models.py:200 bugs/models.py:207 bugs/models.py:214
+msgid "Select the value corresponding to the issue you encounter."
+msgstr ""
+
+#: bugs/models.py:203
+msgid "How will those affected feel about the bug?"
+msgstr ""
+
+#: bugs/models.py:210
+msgid "Who will be affected by this bug?"
+msgstr ""
+
+#: bugs/models.py:217
+msgid "Killer bug"
+msgstr ""
+
+#: bugs/models.py:219
+msgid ""
+"A killer bug is a bug which appears to be pretty hard and risky to fix but "
+"still must be corrected. The teams leaders must find a solution."
+msgstr ""
+
+#: bugs/models.py:225
+msgid ""
+"A ticket is active until it's state is changed to <code>Solved</code> or "
+"<code>Unsolvable</code>."
+msgstr ""
+
+#: bugs/models.py:227
+msgid "Ticket' status"
+msgstr ""
+
+#: bugs/models.py:229
+msgid ""
+"The ticket' status indicates in which step the bugs is in the correction "
+"process."
+msgstr ""
+
+#: bugs/models.py:236
+msgid "The component concerned by the bug."
+msgstr ""
+
+#: bugs/models.py:241
+msgid "Creator"
+msgstr ""
+
+#: bugs/models.py:245
+msgid "Assignees"
+msgstr ""
+
+#: bugs/models.py:250
+msgid "The users who are in charges of the bug correction."
+msgstr ""
+
+#: bugs/models.py:253
+msgid "Assignee referee"
+msgstr ""
+
+#: bugs/models.py:258
+msgid "The referee for this bug."
+msgstr ""
+
+#: bugs/models.py:260
+msgid "Assignees notes"
+msgstr ""
+
+#: bugs/models.py:263
+msgid "Whatever the assignees consider worst noticing."
+msgstr ""
+
+#: bugs/models.py:266
+msgid "Planning"
+msgstr ""
+
+#: bugs/models.py:270
+msgid "The milestone in which the bug is planned to be fixed."
+msgstr ""
+
+#: bugs/models.py:273
+msgid "End"
+msgstr ""
+
+#: bugs/models.py:277
+msgid "The milestone in which the bug was fixed."
+msgstr ""
+
+#: bugs/models.py:285
+msgid "Allow comments"
+msgstr ""
+
+#: bugs/models.py:287
+msgid "Does users can comments tickets?"
+msgstr ""
+
+#: bugs/models.py:289
+msgid "Context"
+msgstr ""
+
+#: bugs/models.py:293
+msgid "A dict object which should contains contextual data on the bug."
+msgstr ""
+
+#: bugs/models.py:295
+msgid "External datas"
+msgstr ""
+
+#: bugs/models.py:301
+msgid ""
+"A link to additionnal ressources for this ticket, such as screenshots, logs, "
+"or whatever that can be usefull to fix the bug."
+msgstr ""
+
+#: bugs/models.py:348
+msgid "None"
+msgstr ""
+
+#: bugs/models.py:349
+msgid "Comments"
+msgstr ""
+
+#: bugs/models.py:392
+msgid "Ticket"
+msgstr ""
+
+#: bugs/models.py:393
+msgid "Tickets"
+msgstr ""
+
+#: bugs/views.py:32 bugs/views.py:38 bugs/views.py:44
+msgid "Select the value corresponding to the issue you encounter."
+msgstr ""
+
+#: bugs/views.py:35
+msgid "Who will be affected by this bug?"
+msgstr ""
+
+#: bugs/views.py:41
+msgid "How will those affected feel about the bug?"
+msgstr ""
+
+#: bugs/views.py:47
+msgid "What type of bug is this?"
+msgstr ""
+
+#: bugs/views.py:75
+msgid "Untitled Page"
+msgstr ""
+
+#: bugs/views.py:137
+msgid "Tickets"
+msgstr ""
+
+#: bugs/views.py:148
+#, python-format
+msgid "Tickets for component %s"
+msgstr ""
+
+#: bugs/views.py:180
+msgid "Ticket Details"
+msgstr ""
+
+#: bugs/views.py:246
+msgid "New Ticket Form"
+msgstr ""
+
+#: bugs/views.py:269 bugs/views.py:281
+#, python-format
+msgid "Edit %s"
+msgstr ""

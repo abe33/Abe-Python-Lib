@@ -1,0 +1,361 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2011-06-21 18:08+0200\n"
+"PO-Revision-Date: 2011-06-21 18:09+0100\n"
+"Last-Translator: Cédric Néhémie <cedric.nehemie@aesia.com>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=n>1;\n"
+
+#: settings_localhost.py:25
+msgid "English"
+msgstr "Anglais"
+
+#: settings_localhost.py:26
+msgid "French"
+msgstr "Français"
+
+#: types.py:108
+msgid "The type property of the argument dict is mandatory."
+msgstr ""
+
+#: types.py:145
+msgid "The argument must be a valid TypeInstance object."
+msgstr ""
+
+#: utils.py:260
+msgid "All"
+msgstr "Tout"
+
+#: posts/admin.py:18
+#: posts/admin.py:34
+#: posts/admin.py:46
+#: posts/admin.py:60
+msgid "BabelFish"
+msgstr "BabelFish"
+
+#: posts/admin.py:19
+#: posts/admin.py:35
+#: posts/admin.py:47
+#: posts/admin.py:61
+msgid "Content"
+msgstr "Contenu"
+
+#: posts/admin.py:20
+msgid "Categorization"
+msgstr "Catégorisation"
+
+#: posts/admin.py:21
+msgid "Publication"
+msgstr "Publication"
+
+#: posts/admin.py:22
+#: posts/models.py:143
+msgid "Orphan page"
+msgstr "Page orpheline"
+
+#: posts/admin.py:23
+msgid "Post Group"
+msgstr "Groupe de billet"
+
+#: posts/feeds.py:9
+#: posts/feeds.py:11
+msgid "Latest published posts"
+msgstr "Derniers billets publiés"
+
+#: posts/feeds.py:37
+#, python-format
+msgid "Latest published posts in category %s"
+msgstr "Derniers billets publiés dans la catégorie %s"
+
+#: posts/feeds.py:54
+#, python-format
+msgid "Latest published posts with tag %s"
+msgstr "Derniers billets publiés avec le tag %s"
+
+#: posts/models.py:20
+#: posts/models.py:72
+msgid "Category Slug"
+msgstr "Permalien de la catégorie"
+
+#: posts/models.py:22
+#: posts/models.py:71
+msgid "Category Name"
+msgstr "Nom de la catégorie"
+
+#: posts/models.py:23
+#: posts/models.py:73
+msgid "Category Description"
+msgstr "Description de la catégorie"
+
+#: posts/models.py:26
+#: posts/models.py:76
+msgid "The category description is generally used in category pages, or as a link description while linking to a category."
+msgstr "La description de la catégorie est générallement utilisé dans les pages de catégorie, ou comme description des liens hypertextes vers les pages de catégories."
+
+#: posts/models.py:29
+#: posts/models.py:146
+#: posts/models.py:254
+msgid "Creation date"
+msgstr "Date de création"
+
+#: posts/models.py:30
+#: posts/models.py:147
+#: posts/models.py:255
+msgid "Update date"
+msgstr "Dernière mise à jour"
+
+#: posts/models.py:32
+#: posts/models.py:135
+msgid "Allow comments"
+msgstr "Autorisé les commentaires"
+
+#: posts/models.py:64
+msgid "Post Category"
+msgstr "Catégorie des Billets"
+
+#: posts/models.py:65
+msgid "Post Categories"
+msgstr "Catégories des Billets"
+
+#: posts/models.py:126
+msgid "Post title"
+msgstr "Titre du billet"
+
+#: posts/models.py:127
+msgid "Post slug"
+msgstr "Permalien du billet"
+
+#: posts/models.py:129
+msgid "Post excerpt"
+msgstr "Chapeau du billet"
+
+#: posts/models.py:130
+msgid "Post content"
+msgstr "Contenu du billet"
+
+#: posts/models.py:132
+#: posts/models.py:256
+msgid "Featured"
+msgstr "Épinglé"
+
+#: posts/models.py:133
+msgid "Tags"
+msgstr "Tags"
+
+#: posts/models.py:134
+msgid "Category"
+msgstr "Catégorie"
+
+#: posts/models.py:137
+msgid "Group"
+msgstr "Groupe"
+
+#: posts/models.py:138
+msgid "Group Order"
+msgstr "Ordre dans le groupe"
+
+#: posts/models.py:140
+msgid "Published"
+msgstr "Publié"
+
+#: posts/models.py:141
+msgid "Published date"
+msgstr "Date de publication"
+
+#: posts/models.py:144
+msgid "Orphan page ID"
+msgstr "ID de page orpheline"
+
+#: posts/models.py:153
+msgid "None"
+msgstr "Aucun"
+
+#: posts/models.py:154
+msgid "Comments"
+msgstr "Commentaires"
+
+#: posts/models.py:242
+msgid "Post"
+msgstr "Billet"
+
+#: posts/models.py:243
+#: posts/views.py:153
+msgid "Posts"
+msgstr "Billets"
+
+#: posts/models.py:250
+msgid "Link title"
+msgstr "Titre du lien"
+
+#: posts/models.py:251
+msgid "Link url"
+msgstr "URL du lien"
+
+#: posts/models.py:252
+msgid "Link icon"
+msgstr "Icône du lien"
+
+#: posts/models.py:253
+msgid "Link description"
+msgstr "Description du lien"
+
+#: posts/models.py:257
+msgid "Relation Tag"
+msgstr "Relation"
+
+#: posts/models.py:273
+msgid "Site Link"
+msgstr "Lien"
+
+#: posts/models.py:274
+msgid "Site Links"
+msgstr "Liens"
+
+#: posts/settings.py:24
+msgid "This is a default description for this page."
+msgstr "Ceci est une description par défaut pour la page."
+
+#: posts/settings.py:28
+msgid "Welcome on the homepage of this site."
+msgstr "Bienvenue sur la page d'acceuil dece site."
+
+#: posts/views.py:95
+msgid "404 Error"
+msgstr "Erreur 404"
+
+#: posts/views.py:105
+#: posts/views.py:120
+#: posts/views.py:127
+#: posts/views.py:139
+#, python-format
+msgid "Post - %(name)s"
+msgstr "Billet - %(name)s"
+
+#: posts/views.py:176
+#, python-format
+msgid "Category : %(cat)s"
+msgstr "Catégorie : %(cat)s"
+
+#: posts/views.py:188
+#, python-format
+msgid "Posts for %(year)s"
+msgstr "Billets de %(year)s"
+
+#: posts/views.py:200
+#, python-format
+msgid "Posts for the %(month)s %(year)s"
+msgstr "Billets du %(month)s %(year)s"
+
+#: posts/views.py:214
+#, python-format
+msgid "Posts for the %(group)s series"
+msgstr "Billet pour le groupe %(group)s"
+
+#: posts/views.py:231
+#: posts/views.py:238
+msgid "Links"
+msgstr "Liens"
+
+#: posts/views.py:270
+#: posts/views.py:278
+msgid "Archives"
+msgstr "Archives"
+
+#: posts/views.py:294
+#, python-format
+msgid "Search : %(query)s"
+msgstr "Recherche : %(query)s"
+
+#: templates/admin/bugs/ticket/change_list.html:55
+#: templates/admin/missions/mission/change_list.html:56
+msgid "Home"
+msgstr "Acceuil"
+
+#: templates/admin/bugs/ticket/change_list.html:73
+#, python-format
+msgid "Add %(name)s"
+msgstr "Ajout %(name)s"
+
+#: templates/admin/bugs/ticket/change_list.html:91
+msgid "Filter"
+msgstr "Filtre"
+
+#: templates/admin/bugs/ticket/change_list.html:119
+msgid "Please correct the error below."
+msgid_plural "Please correct the errors below."
+msgstr[0] "Veuillez corriger l'erreur ci-dessous."
+msgstr[1] "Veuillez corriger les erreurs ci-dessous."
+
+#: templates/posts/archives_list.html:12
+#: templates/posts/xml_archives_list.html:9
+#, python-format
+msgid "Total posts : %(total_count)s"
+msgstr "Nombre total de billets : %(total_count)s"
+
+#: templates/posts/archives_list.html:19
+#: templates/posts/xml_archives_list.html:16
+msgid "See posts by date"
+msgstr "Voir les billets par date"
+
+#: templates/posts/orphan_view.html:17
+#: templates/posts/post_view.html:16
+msgid "Not published"
+msgstr "Non publié"
+
+#: templates/posts/orphan_view.html:20
+#: templates/posts/post_list.html:39
+#: templates/posts/post_view.html:19
+#: templates/posts/xml_post_list.html:26
+msgid "Published in "
+msgstr "Publié dans "
+
+#: templates/posts/post_details.html:10
+#: templates/posts/post_list.html:45
+#: templates/posts/xml_post_list.html:32
+#, python-format
+msgid "%(comment_count)s Comment"
+msgid_plural "%(comment_count)s Comments"
+msgstr[0] "%(comment_count)s Commentaire"
+msgstr[1] "%(comment_count)s Commentaires"
+
+#: templates/posts/post_list.html:6
+#: templates/posts/post_list.html.py:17
+#: templates/posts/xml_post_list.html:5
+msgid "RSS feed for this page"
+msgstr "Flux RSS pour la page"
+
+#: templates/posts/post_list.html:50
+#: templates/posts/xml_post_list.html:37
+msgid "Read more"
+msgstr "Lire la suite"
+
+#: templates/posts/post_list.html:60
+#: templates/posts/xml_post_list.html:47
+msgid "Oldest posts"
+msgstr "Billets anciens"
+
+#: templates/posts/post_list.html:62
+#: templates/posts/xml_post_list.html:49
+msgid "Recents posts"
+msgstr "Billets récents"
+
+#~ msgid "BabelFish Status"
+#~ msgstr "Status BabelFish"
+
+#~ msgid ""
+#~ "Reminder : An empty translation will be ignored, and the default will be "
+#~ "used instead."
+#~ msgstr ""
+#~ "Rappel : Une traduction vide sera ignorée, et la valeur par défaut sera "
+#~ "utilisée."

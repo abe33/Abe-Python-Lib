@@ -1,29 +1,37 @@
 {% extends "base.html" %}
 {% load i18n posts %}
 
-{% block content %}
-<h2>{{ page_title }}</h2>
-<div id="links">
-<p class="index">
-    {% for link in links %}
-        {% ifchanged link.name|slice:":1" %}
-            <a href="#{{ link.name|slice:":1" }}">{{ link.name|slice:":1" }}</a>{% if not forloop.last %},{% endif %}
-        {% endifchanged %}
+{% block links %}
+    {{ block.super }}
+    {% for post in links %}
+    <link rel="external" href="{{link.url}}" title="{{ link.name }}"/>
     {% endfor %}
-</p>
-<hr/>
+{% endblock %}
 
-    {% for link in links %}
+{% block content %}
+<h3>{{ page_title }}</h3>
+<div id="links">
+    <p class="index">
+        {% for link in links %}
         {% ifchanged link.name|slice:":1" %}
-            <a name="{{ link.name|slice:":1" }}"></a>
-            {% if not forloop.fitrst %}</ul>{% endif %}
-            <h3>{{ link.name|slice:":1" }}</h3>
-           <ul>
+        <a href="#{{ link.name|slice:":1" }}">{{ link.name|slice:":1" }}</a>{% if not forloop.last %},{% endif %}
         {% endifchanged %}
-        <li> <span class="link-icon">{% if link.icon %}<img src="{{ MEDIA_URL }}{{link.icon}}"/>{% endif %}</span>
-        <span class="link-text"><a href="{{link.url}}" title="{{ link.name }}">{{ link.name }}</a>
+        {% endfor %}
+    </p>
+    <hr/>
+    {% for link in links %}
+    {% ifchanged link.name|slice:":1" %}
+    <a name="{{ link.name|slice:":1" }}"></a>
+    {% if not forloop.fitrst %}</ul>{% endif %}
+    <h4>{{ link.name|slice:":1" }}</h4>
+    <nav>
+    <ul>
+    {% endifchanged %}
+        <li><span class="link-icon">{% if link.icon %}<a href="{{link.url}}" title="{{ link.name }}" rel="external"><img src="{{ MEDIA_URL }}{{link.icon}}" alt="{{ link.name }}"/></a>{% endif %}</span>
+        <span class="link-text"><a href="{{link.url}}" title="{{ link.name }}" rel="external">{{ link.name }}</a>
         {% autoescape off %}{{link.description }}{% endautoescape %}</span></li>
-    {% endfor %}
+        {% endfor %}
     </ul>
+    </nav>
 </div>
 {% endblock %}

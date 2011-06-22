@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
+from django.utils.translation import ugettext as _
 
 # Django settings for serasounddesign project.
-
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
@@ -14,14 +14,17 @@ MANAGERS = ADMINS
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': '/home/cedric/Developpement/Dev/libs/aesia/django/abe/ssd.db',          # Or path to database file if using sqlite3.
+        'NAME': '/home/cedric/Developpement/python/abe/ssd.db',          # Or path to database file if using sqlite3.
         'USER': '',                      # Not used with sqlite3.
         'PASSWORD': '',                  # Not used with sqlite3.
         'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
         'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
     }
 }
-
+LANGUAGES = (
+    ('en', _(u'English')),
+    ('fr', _(u'French')),
+)
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
 # although not all choices may be available on all operating systems.
@@ -47,7 +50,7 @@ USE_L10N = True
 
 # Absolute path to the directory that holds media.
 # Example: "/home/media/media.lawrence.com/"
-MEDIA_ROOT = '/var/www/abe/abe_media/'
+MEDIA_ROOT = '/home/cedric/Developpement/python/abe/abe_media/'
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash if there is a path component (optional in other cases).
@@ -57,7 +60,7 @@ MEDIA_URL = 'http://localhost/abe_media/'
 # URL prefix for admin media -- CSS, JavaScript and images. Make sure to use a
 # trailing slash.
 # Examples: "http://foo.com/media/", "/media/".
-ADMIN_MEDIA_PREFIX = '/media/admin/'
+ADMIN_MEDIA_PREFIX = '/media/'
 
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = '4nq(63t*c_@h6@gl95gasv5qbpp4toor5*y(!d-r+y$h9s&obq'
@@ -75,11 +78,12 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-	'abe.missions.middleware.MissionMiddleware', 
+#    'abe.missions.middleware.MissionMiddleware', 
+    'babelfish.middleware.UserAgentLangMiddleware', 
 )
 # List of directories which contains the initial datas for the database
 FIXTURE_DIRS = (
-    '/var/www/abe/fixtures/',
+    '/home/cedric/Developpement/python/abe/fixtures/',
 )
 
 ROOT_URLCONF = 'abe.urls_localhost'
@@ -88,8 +92,9 @@ TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
-	"/var/www/abe/templates/", 
+    "/home/cedric/Developpement/python/abe/templates/", 
 )
+
 TEMPLATE_CONTEXT_PROCESSORS = ("django.contrib.auth.context_processors.auth",
 "django.core.context_processors.debug",
 "django.core.context_processors.request",
@@ -98,17 +103,20 @@ TEMPLATE_CONTEXT_PROCESSORS = ("django.contrib.auth.context_processors.auth",
 "abe.context_processors.media_url",)
 
 INSTALLED_APPS = (
-	'grappelli', 
-	'django.contrib.auth',
-	'django.contrib.contenttypes',
-	'django.contrib.sessions',
-	'django.contrib.sites',
-	'django.contrib.messages',
-	'django.contrib.comments',
-	'django.contrib.admin',
-	'django.contrib.admindocs',
-	'abe.posts', 
-	'abe.bugs', 
-	'tagging', 
-	'missions', 
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.sites',
+    'django.contrib.messages',
+    'django.contrib.comments',
+    'django.contrib.admin',
+    'django.contrib.admindocs',
+    'abe.posts', 
+    'babelfish', 
+    'tagging', 
+)
+
+LOCALE_PATHS = (
+    '/home/cedric/Developpement/python/django-babelfish/locale',
+    '/home/cedric/Developpement/python/abe/locale',
 )

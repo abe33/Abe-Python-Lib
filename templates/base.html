@@ -1,4 +1,4 @@
-{% load i18n posts tickets missions %}
+{% load i18n posts %}
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en"><head>
 
@@ -40,8 +40,6 @@
 
 	</head>
 	<body>
-		{% render_mission_notification %}
-	
 		<div id="nav">
 			<nav>{% block nav %}{% endblock %}</nav>
 		</div>
@@ -60,7 +58,7 @@
 		</div>
 		
 		<div id="footer">
-			<footer>{% block footer %}{% render_ajax_ticket_form request %}{% endblock %}</footer>
+			<footer>{% block footer %}{% endblock %}</footer>
 		</div>
 </body>
 </html>

@@ -1,5 +1,0 @@
-{% load i18n %}
-<select id="comps" onchange="window.location = this.value;">
-<option value="{% url tickets_list %}" {% if component == None %}selected="selected"{% endif %}>{% trans 'All components' %}</option>
-{% for comp in components %}<option value="{% url tickets_by_component component=comp.name %}" {% if component.name == comp.name %}selected="selected"{% endif %}>{{ comp.name }}</option>{% endfor %}
-</select>

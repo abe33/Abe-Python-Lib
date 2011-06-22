@@ -1,37 +1,34 @@
 {% load i18n tagging_tags posts comments %}
-<h3 class="post-date">
-{% if post.published %}
-    <abbr class="published" title="{{  post.published_date|date:"Y-m-j" }}">
-        <span class="day">{{  post.published_date|date:"j" }}</span>
-        <span class="month">{{  post.published_date|date:"b" }}</span>
-        <span class="year">{{  post.published_date|date:"Y" }}</span>
-    </abbr>
-    {% else %}
-    <abbr class="published">{% trans "Not published" %}</abbr>
-    {% endif %}
-   </h3>
 <article id="post{{ post.id }}">
-    <div class="post {{post.category|lower}}">
-        <div class="post-header">
-            <h4 class="post-title">
-                <a rel="bookmark" href="{{ post.get_absolute_url }}">{{post.name}}</a>
-            </h4>
-            <span class="post-details">{% trans "Published in " %}<a href="{{ post.category.get_absolute_url }}">{{post.category.name}}</a></span>
-            {% if post.tags %}
-            <span class="post-tags">{% tags_for_object post as tag_list %}
-            {% for tag in tag_list %}{% url post_by_tag tag as tag_url %}<a href="{{tag_url}}">{{ tag }}</a>{% if not forloop.last %},&nbsp;{% endif %}{% endfor %}</span>
-            {% endif %}
-        </div>
+    <div class="post">
+        <header>
+            <div class="post-header">
+                <h1><a rel="bookmark" href="{{ post.get_absolute_url }}">{{post.name}}</a></h1>
+                {% if post.published %}
+                <time datetime="{{  post.published_date|date:"Y-m-j" }}" pubdate>
+                    <p class="post-date">
+                        <span class="day">{{  post.published_date|date:"j" }}</span>
+                        <span class="month">{{  post.published_date|date:"b" }}</span>
+                        <span class="year">{{  post.published_date|date:"Y" }}</span>
+                    </p>
+                </time>
+                {% else %}
+                <h2>{% trans "Not published" %}</h2>
+                {% endif %}
+                
+                <span class="post-details">{% trans "Published in " %}<a href="{{ post.category.get_absolute_url }}">{{post.category.name}}</a></span>
+                {% if post.tags %}
+                <span class="post-tags">{% tags_for_object post as tag_list %}
+                {% for tag in tag_list %}{% url post_by_tag tag as tag_url %}
+                <a href="{{tag_url}}" rel="tag">{{ tag }}</a>{% if not forloop.last %},&nbsp;{% endif %}{% endfor %}
+                </span>
+                {% endif %}
+            </div>
+        </header>
         <div class="post-body">
-            <div id="content{{ post.id }}">{% autoescape off%}{% if post.has_hidden_content %}{{post.excerpt}}{% endif %}<hr/>{{post.content}}{% endautoescape%}</div>
-			
-	</div>
+            <div id="content{{ post.id }}">{% autoescape off%}{% if post.has_hidden_content %}{{post.excerpt}}{% endif %}{{post.content}}{% endautoescape%}</div>
         </div>
     </div>
 </article>
-{% if post.allow_comments %}
-	<div id="comments-bloc">
-	{% get_comment_count for post as comment_count %}
-	<h3>{% blocktrans count comment_count as counter %}{{ comment_count }} Comment{% plural %}{{ comment_count }} Comments{% endblocktrans %}</h3>
-	{% render_comment_list for post %}</div>
-{% endif %}
+
+

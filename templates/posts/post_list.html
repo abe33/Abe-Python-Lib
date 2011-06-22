@@ -1,57 +1,67 @@
 {% extends 'base.html' %}
 {% load i18n tagging_tags comments posts %}
 
+{% block links %}
+    {{ block.super }}
+    <link href="{{rss_page_url}}" rel="alternate" title="{% trans "RSS feed for this page" %} {{page_title }}"/>
+    {% for post in posts_list %}
+    <link rel="chapter" href="{{ post.get_absolute_url }}" title="{{ post.name }}"/>
+    {% endfor %}
+{% endblock %}
+
 {% block content %}
-<h2>{{ page_title }}</h2>
+<header>
+    <h3>{{ page_title }}</h3>
+</header>
 {% if rss_page_url %}
-<a href="{{rss_page_url}}" class="feed" title="{% trans "RSS feed for this page" %} {{page_title }}"><img src="{{ MEDIA_URL }}img/feed-icon-28x28.png" alt="{% trans "RSS feed for this page" %} {{page_title }}"></a>
+<a href="{{rss_page_url}}" class="feed" title="{% trans "RSS feed for this page" %} {{page_title }}" rel="alternate">{% trans "RSS feed for this page" %} {{page_title }}</a>
 {% endif %}
-<div id="menu">
-	{% render_categories_list %}
-</div>
 <div id="posts">
-<section>
-{% for post in posts_list %}
-    {% ifchanged post.published_date %}
-        <h3 class="post-date">
-        <abbr class="published" title="{{  post.published_date|date:"Y-m-j" }}">
-            <span class="day">{{  post.published_date|date:"j" }}</span>
-            <span class="month">{{  post.published_date|date:"b" }}</span>
-            <span class="year">{{  post.published_date|date:"Y" }}</span>
-        </abbr></h3>
-    {% endifchanged %}
-    
-    <article id="post{{ post.id }}">
-        <div class="post {{post.category|lower}}">
-            <div class="post-header">
-                <h4 class="post-title">
-                    <a rel="bookmark" href="{{ post.get_absolute_url }}">{{post.name}}</a>
-                </h4>
-                <span class="post-details">{% trans "Published in " %}<a href="{{ post.category.get_absolute_url }}">{{post.category.name}}</a></span>
-                {% if post.tags %}
-                <span class="post-tags">{% tags_for_object post as tag_list %}
-                {% for tag in tag_list %}{% url post_by_tag tag as tag_url %}<a href="{{tag_url}}">{{ tag }}</a>{% if not forloop.last %},&nbsp;{% endif %}{% endfor %}</span>
-                {% endif %}
-				{% get_comment_count for post as comment_count %}
-				{% if post.allow_comments %}<span class="comments">{% blocktrans count comment_count as counter %}{{ comment_count }} Comment{% plural %}{{ comment_count }} Comments{% endblocktrans %}</span>{% endif %}
-
+    <section>
+    {% for post in posts_list %}
+        {% ifchanged post.published_date %}
+            <time datetime="{{  post.published_date|date:"Y-m-j" }}" pubdate>
+                <p class="post-date">
+                    <span class="day">{{  post.published_date|date:"j" }}</span>
+                    <span class="month">{{  post.published_date|date:"b" }}</span>
+                    <span class="year">{{  post.published_date|date:"Y" }}</span>
+                </p>
+            </time>
+        {% endifchanged %}
+        
+        <article id="post{{ post.id }}">
+            <div class="post">
+                <div class="post-header">
+                    <header>
+                        <h1 class="post-title">
+                            <a rel="bookmark" href="{{ post.get_absolute_url }}">{{post.name}}</a>
+                        </h1>
+                        <span class="post-details">{% trans "Published in " %}<a href="{{ post.category.get_absolute_url }}">{{post.category.name}}</a></span>
+                        {% if post.tags %}
+                        <span class="post-tags">{% tags_for_object post as tag_list %}
+                        {% for tag in tag_list %}{% url post_by_tag tag as tag_url %}<a href="{{tag_url}}" rel="tag">{{ tag }}</a>{% if not forloop.last %},&nbsp;{% endif %}{% endfor %}</span>
+                        {% endif %}
+                        {% get_comment_count for post as comment_count %}
+                        {% if post.allow_comments %}<span class="comments">{% blocktrans count comment_count as counter %}{{ comment_count }} Comment{% plural %}{{ comment_count }} Comments{% endblocktrans %}</span>{% endif %}
+                    </header>
+                </div>
+                <div class="post-body">
+                    <div id="content{{ post.id }}">{% autoescape off%}{{post.content_or_excerpt}}{% endautoescape%}</div>
+                    {% if post.has_hidden_content %}<span class="read-it"><a href="{{ post.get_absolute_url }}">{% trans "Read more" %}</a></span>{% endif %}
+                </div>
             </div>
-            <div class="post-body">
-                <div id="content{{ post.id }}">{% autoescape off%}{{post.content_or_excerpt}}{% endautoescape%}</div>
-                {% if post.has_hidden_content %}<span class="read-it"><a href="{{ post.get_absolute_url }}">{% trans "Read more" %}</a></span>{% endif %}
-            </div>
-        </div>
-    </article>
+        </article>
+    {% endfor %}
+    </section>
 
-{% endfor %}
-</section>
-
-{% if has_next_page or has_previous_page %} 
-<div class="pagination">
-{%if has_next_page %}<a href="{{next_page_url }}">{%trans "Oldest posts" %}</a>{% endif %}
-{% if has_next_page and has_previous_page %}|&nbsp;{% endif %}
-{%if has_previous_page %}<a href="{{previous_page_url }}">{%trans "Recents posts" %}</a>{% endif %}
-</div>
-{% endif %}
+    {% if has_next_page or has_previous_page %}
+        <div class="pagination">
+    <nav> 
+        {%if has_next_page %}<a href="{{next_page_url }}" rel="prev">{%trans "Oldest posts" %}</a>{% endif %}
+        {% if has_next_page and has_previous_page %}|&nbsp;{% endif %}
+        {%if has_previous_page %}<a href="{{previous_page_url }}" rel="next">{%trans "Recents posts" %}</a>{% endif %}
+        </nav>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

@@ -3,7 +3,7 @@
 options="--settings=abe.settings_localhost --pythonpath=/var/www"
 
 # flush the db
-python ../manage.py flush $options
+#python ../manage.py flush $options
 
 # sync the db with django models
 python ../manage.py syncdb $options 

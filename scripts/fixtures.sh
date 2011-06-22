@@ -18,11 +18,11 @@ python ../manage.py dumpdata posts \
 		--pythonpath=/var/www \
 		> ../fixtures/posts/initial_data.xml
 
-python ../manage.py dumpdata bugs \
-		--format=xml \
-		--settings=abe.settings_localhost \
-		--pythonpath=/var/www \
-		> ../fixtures/bugs/initial_data.xml
+#python ../manage.py dumpdata bugs \
+#		--format=xml \
+#		--settings=abe.settings_localhost \
+#		--pythonpath=/var/www \
+#		> ../fixtures/bugs/initial_data.xml
 		
 python ../manage.py dumpdata comments \
 		--format=xml \

@@ -1,0 +1,9 @@
+{% load i18n %}
+
+<nav>
+    <ul id="categories-list">
+    {% for cat in categories %}
+        <li><a href="{{cat.get_absolute_url}}">{{ cat.name }}</a></li>
+    {%endfor%}
+    </ul>
+</nav>
