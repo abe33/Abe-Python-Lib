@@ -6,6 +6,7 @@ from django.core.urlresolvers import reverse
 from django import template
 from django.contrib.comments.models import Comment
 from django.template.loader import render_to_string
+from django.utils.translation import ugettext as _
 
 from abe.posts.models import *
 from abe.posts import settings as msettings
@@ -111,7 +112,7 @@ def render_archives_list( archives, archive_view=None, archive_view_year=None, a
              'archive_view_month':archive_view_month }
     
 def render_links_list():
-    objects = SiteLink.objects.all()
+    objects = SiteLink.objects.all().order_by('?')[:6]
     return { 'links':objects }
 
 def render_tags_cloud( tags, tag_view=None ):
@@ -143,7 +144,7 @@ def get_page_description_meta( request ):
                 else:
                     desc = d
     
-    return '<meta name="description" content="%s"/>' % desc
+    return '<meta name="description" content="%s"/>' % _(desc)
     
 counter = 0
 

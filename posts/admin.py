@@ -10,10 +10,10 @@ from babelfish.admin import BabelFishAdmin
 
 class PostAdmin(BabelFishAdmin):
     list_display=( "name", "author", "category", 'group', 'group_order', "allow_comments","comments_count", "featured", "published", "published_date", "tags", "slug", "orphan", "orphan_id", )
-    list_filter=( "featured", "published", "published_date","category", "tags", )
-    search_fields = ("name", "tags", "category", )
-    list_display_links = ('name', 'slug', )
-    list_editable=("featured","published","tags","allow_comments",  )
+    list_filter=( "author","featured", "published", "published_date","category", "tags", )
+    search_fields = ( "author", "name", "tags", "category", )
+    list_display_links = ( 'name', 'slug', )
+    list_editable=( "featured","published","tags","allow_comments" )
     fieldsets = [
         ( _(u'Content'),       {'fields': ['name','excerpt', 'content'] }),
         ( _(u'BabelFish'),     {'fields': ['bf_translations',] }),

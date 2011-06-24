@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-06-21 18:08+0200\n"
-"PO-Revision-Date: 2011-06-21 18:09+0100\n"
+"POT-Creation-Date: 2011-06-24 11:46+0200\n"
+"PO-Revision-Date: 2011-06-24 11:47+0100\n"
 "Last-Translator: Cédric Néhémie <cedric.nehemie@aesia.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: \n"
@@ -27,29 +27,29 @@ msgstr "Français"
 
 #: types.py:108
 msgid "The type property of the argument dict is mandatory."
-msgstr ""
+msgstr "La propriété type du dictionnaire d'argument est obligatoire."
 
 #: types.py:145
 msgid "The argument must be a valid TypeInstance object."
-msgstr ""
+msgstr "L'argument doit être un objet TypeInstance valide."
 
 #: utils.py:260
 msgid "All"
 msgstr "Tout"
 
 #: posts/admin.py:18
+#: posts/admin.py:33
+#: posts/admin.py:45
+#: posts/admin.py:59
+msgid "Content"
+msgstr "Contenu"
+
+#: posts/admin.py:19
 #: posts/admin.py:34
 #: posts/admin.py:46
 #: posts/admin.py:60
 msgid "BabelFish"
 msgstr "BabelFish"
-
-#: posts/admin.py:19
-#: posts/admin.py:35
-#: posts/admin.py:47
-#: posts/admin.py:61
-msgid "Content"
-msgstr "Contenu"
 
 #: posts/admin.py:20
 msgid "Categorization"
@@ -60,13 +60,20 @@ msgid "Publication"
 msgstr "Publication"
 
 #: posts/admin.py:22
-#: posts/models.py:143
+#: posts/models.py:159
 msgid "Orphan page"
 msgstr "Page orpheline"
 
 #: posts/admin.py:23
+#: posts/models.py:131
 msgid "Post Group"
 msgstr "Groupe de billet"
+
+#: posts/admin.py:35
+#: posts/admin.py:47
+#: posts/admin.py:61
+msgid "Extra"
+msgstr "Extra"
 
 #: posts/feeds.py:9
 #: posts/feeds.py:11
@@ -83,142 +90,150 @@ msgstr "Derniers billets publiés dans la catégorie %s"
 msgid "Latest published posts with tag %s"
 msgstr "Derniers billets publiés avec le tag %s"
 
-#: posts/models.py:20
-#: posts/models.py:72
+#: posts/models.py:21
+#: posts/models.py:73
 msgid "Category Slug"
 msgstr "Permalien de la catégorie"
 
-#: posts/models.py:22
-#: posts/models.py:71
+#: posts/models.py:23
+#: posts/models.py:72
 msgid "Category Name"
 msgstr "Nom de la catégorie"
 
-#: posts/models.py:23
-#: posts/models.py:73
+#: posts/models.py:24
+#: posts/models.py:74
 msgid "Category Description"
 msgstr "Description de la catégorie"
 
-#: posts/models.py:26
-#: posts/models.py:76
+#: posts/models.py:27
+#: posts/models.py:77
 msgid "The category description is generally used in category pages, or as a link description while linking to a category."
 msgstr "La description de la catégorie est générallement utilisé dans les pages de catégorie, ou comme description des liens hypertextes vers les pages de catégories."
 
-#: posts/models.py:29
-#: posts/models.py:146
-#: posts/models.py:254
+#: posts/models.py:30
+#: posts/models.py:162
+#: posts/models.py:290
 msgid "Creation date"
 msgstr "Date de création"
 
-#: posts/models.py:30
-#: posts/models.py:147
-#: posts/models.py:255
+#: posts/models.py:31
+#: posts/models.py:163
+#: posts/models.py:291
 msgid "Update date"
 msgstr "Dernière mise à jour"
 
-#: posts/models.py:32
-#: posts/models.py:135
+#: posts/models.py:33
+#: posts/models.py:151
 msgid "Allow comments"
 msgstr "Autorisé les commentaires"
 
-#: posts/models.py:64
+#: posts/models.py:65
 msgid "Post Category"
 msgstr "Catégorie des Billets"
 
-#: posts/models.py:65
+#: posts/models.py:66
 msgid "Post Categories"
 msgstr "Catégories des Billets"
 
-#: posts/models.py:126
+#: posts/models.py:132
+msgid "Post Groups"
+msgstr "Groupes de billet"
+
+#: posts/models.py:140
+msgid "Author"
+msgstr "Auteur"
+
+#: posts/models.py:142
 msgid "Post title"
 msgstr "Titre du billet"
 
-#: posts/models.py:127
+#: posts/models.py:143
 msgid "Post slug"
 msgstr "Permalien du billet"
 
-#: posts/models.py:129
+#: posts/models.py:145
 msgid "Post excerpt"
 msgstr "Chapeau du billet"
 
-#: posts/models.py:130
+#: posts/models.py:146
 msgid "Post content"
 msgstr "Contenu du billet"
 
-#: posts/models.py:132
-#: posts/models.py:256
+#: posts/models.py:148
+#: posts/models.py:292
 msgid "Featured"
 msgstr "Épinglé"
 
-#: posts/models.py:133
+#: posts/models.py:149
 msgid "Tags"
 msgstr "Tags"
 
-#: posts/models.py:134
+#: posts/models.py:150
 msgid "Category"
 msgstr "Catégorie"
 
-#: posts/models.py:137
+#: posts/models.py:153
 msgid "Group"
 msgstr "Groupe"
 
-#: posts/models.py:138
+#: posts/models.py:154
 msgid "Group Order"
 msgstr "Ordre dans le groupe"
 
-#: posts/models.py:140
+#: posts/models.py:156
 msgid "Published"
 msgstr "Publié"
 
-#: posts/models.py:141
+#: posts/models.py:157
 msgid "Published date"
 msgstr "Date de publication"
 
-#: posts/models.py:144
+#: posts/models.py:160
 msgid "Orphan page ID"
 msgstr "ID de page orpheline"
 
-#: posts/models.py:153
+#: posts/models.py:169
 msgid "None"
 msgstr "Aucun"
 
-#: posts/models.py:154
+#: posts/models.py:170
 msgid "Comments"
 msgstr "Commentaires"
 
-#: posts/models.py:242
+#: posts/models.py:278
 msgid "Post"
 msgstr "Billet"
 
-#: posts/models.py:243
+#: posts/models.py:279
 #: posts/views.py:153
 msgid "Posts"
 msgstr "Billets"
 
-#: posts/models.py:250
+#: posts/models.py:286
 msgid "Link title"
 msgstr "Titre du lien"
 
-#: posts/models.py:251
+#: posts/models.py:287
 msgid "Link url"
 msgstr "URL du lien"
 
-#: posts/models.py:252
+#: posts/models.py:288
 msgid "Link icon"
 msgstr "Icône du lien"
 
-#: posts/models.py:253
+#: posts/models.py:289
 msgid "Link description"
 msgstr "Description du lien"
 
-#: posts/models.py:257
+#: posts/models.py:293
 msgid "Relation Tag"
 msgstr "Relation"
 
-#: posts/models.py:273
+#: posts/models.py:309
 msgid "Site Link"
 msgstr "Lien"
 
-#: posts/models.py:274
+#: posts/models.py:310
 msgid "Site Links"
 msgstr "Liens"
 

@@ -208,6 +208,26 @@ class Post ( BabelFishModel ) :
             return self.group.get_previous( self )
         else:
             return None
+    
+    def has_previous(self):
+        try :
+            self.get_previous_by_published_date()
+            return True
+        except:
+            return False
+    
+    def has_next(self):
+        try :
+            self.get_next_by_published_date()
+            return True
+        except:
+            return False
+    
+    def get_previous(self):
+        return self.get_previous_by_published_date()
+    
+    def get_next(self):
+        return self.get_next_by_published_date()
 
     def has_hidden_content(self):
         return len( self.excerpt.strip() ) > 0
