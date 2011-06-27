@@ -7,6 +7,8 @@ from django.template.defaultfilters import *
 from django.contrib.comments.models import Comment
 from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
+from django.contrib.sitemaps import ping_google
+from django.contrib.sitemaps import Sitemap
 
 from tagging import fields
 from babelfish.models import BabelFishModel, BabelFishField
@@ -254,6 +256,11 @@ class Post ( BabelFishModel ) :
             self.published_date = datetime.datetime.now()
         
         super( Post,  self ).save()
+        
+        try :
+            ping_google()
+        except:
+            pass
 
     def __unicode__(self):
         return u"%s" % self.name
@@ -278,6 +285,16 @@ class Post ( BabelFishModel ) :
         verbose_name=_(u"Post")
         verbose_name_plural=_(u"Posts")
         ordering = ["-published_date", ]
+
+class PostSitemap(Sitemap):
+    changefreq = "never"
+    priority = 0.5
+
+    def items(self):
+        return Post.objects.filter(published=True, orphan=False)
+
+    def lastmod(self, obj):
+        return obj.published_date
 
 class SiteLink ( BabelFishModel ) :
     translate_fields = ('name','description')

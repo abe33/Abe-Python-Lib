@@ -32,6 +32,10 @@ class CommentArchivesNode(BaseTemplateNode):
 class PostCategoryNode(BaseTemplateNode):
     def  get__new_context_value(self,  context):
         return list( PostCategory.objects.all() )
+    
+class PostFeaturedNode(BaseTemplateNode):
+    def  get__new_context_value(self,  context):
+        return list( Post.objects.filter( published=True, orphan=False, featured=True ) )
         
 class PostArchivesNode(BaseTemplateNode):
     def  get__new_context_value(self,  context):
@@ -77,6 +81,9 @@ def get_comment_archives_list ( parser,  token ):
 def get_post_category_list ( parser,  token ):
     return PostCategoryNode.handle_token( parser,  token )
 
+def get_post_featured_list ( parser,  token ):
+    return PostFeaturedNode.handle_token( parser,  token )
+    
 def get_post_archives_list ( parser,  token ):
     return PostArchivesNode.handle_token( parser,  token )
 
@@ -189,6 +196,7 @@ register.tag( get_post )
 register.tag( get_post_by_comment_id )
 register.tag( get_comment_archives_list )
 register.tag( get_post_category_list )
+register.tag( get_post_featured_list )
 register.tag( get_post_archives_list )
 register.tag( get_post_tags_list )
 register.tag( get_site_links_list )
