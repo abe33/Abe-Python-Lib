@@ -38,7 +38,7 @@ class PostCategory( BabelFishModel ):
         if hasattr( self, "count" ):
             return self.count
         else :
-            setattr( self, "count", self.post_set.count() )
+            setattr( self, "count", self.post_set.filter(published=True).count() )
             return self.count
       
     def get_absolute_url(self):
@@ -256,11 +256,6 @@ class Post ( BabelFishModel ) :
             self.published_date = datetime.datetime.now()
         
         super( Post,  self ).save()
-        
-        try :
-            ping_google()
-        except:
-            pass
 
     def __unicode__(self):
         return u"%s" % self.name
