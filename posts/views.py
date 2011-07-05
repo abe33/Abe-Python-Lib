@@ -98,9 +98,11 @@ def page_not_found( request ):
 
 @login_required
 def post_preview ( request,  id ): 
-    p = Post.objects.get(id=id),
+    p = Post.objects.get(id=id)
+    
     return render_to_response( "posts/post_details.html", 
                                {
+                                   'post':p,
                                    'id':id, 
                                    'page_title':_(u'Post - %(name)s') % {'name':p.name}, 
                                }, 
