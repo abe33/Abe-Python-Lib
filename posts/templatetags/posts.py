@@ -22,9 +22,16 @@ import Image
 register = Library()
 
 
-class SiteLinkNode(BaseTemplateNode):
-    def  get__new_context_value(self,  context):
-        return list( SiteLink.objects.all().order_by("?")[:5] )
+class SiteLinkNode(AdvancedTemplateNode):
+    def  get__new_context_value(self,  context):    
+        f = self.for_object
+        l = f.split("=")
+        
+        kwargs = { l[0] : l[1] }
+        
+        print kwargs
+        
+        return list( SiteLink.objects.filter( **kwargs ).order_by("name") )
 
 class SiteLinkCategoryNode(BaseTemplateNode):
     def  get__new_context_value(self,  context):
@@ -130,8 +137,11 @@ def render_archives_list( archives, archive_view=None, archive_view_year=None, a
              'archive_view_year':archive_view_year, 
              'archive_view_month':archive_view_month }
     
-def render_links_list():
-    objects = SiteLink.objects.all().order_by('?')[:6]
+def render_links_list( links=None ):
+    if links is None:
+        objects = SiteLink.objects.all().order_by('?')[:6]
+    else:
+        objects = links
     return { 'links':objects }
 
 def render_tags_cloud( tags, tag_view=None ):
