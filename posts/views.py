@@ -241,6 +241,27 @@ def links_list ( request ):
                                    }, 
                                    RequestContext( request ) )
 
+def links_list_by_category ( request, category ):
+    c = SiteLinkCategory.objects.get(slug=category)
+    l = SiteLink.objects.filter(category__slug=category)
+    
+    if request.GET.has_key( "json" ):
+        return HttpResponse( simplejson.dumps( [ o.to_dict() for o in l ] ) )
+    elif request.GET.has_key( "xml" ):
+        return render_to_response( "posts/xml_links_index.html", 
+                                   {
+                                       'links':l, 
+                                       'page_title':_(u'Links')
+                                   }, 
+                                   RequestContext( request ) )
+    else:
+        return render_to_response( "posts/links_index.html", 
+                                   {
+                                       'links':l, 
+                                       'page_title':_(u'Links for %s') % c.name
+                                   }, 
+                                   RequestContext( request ) )
+
 def archives_list ( request ):
     posts = Post.objects.filter(published=True, orphan=False)
     comments = Comment.objects.all()

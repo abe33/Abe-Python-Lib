@@ -39,4 +39,5 @@ urlpatterns = patterns('abe.posts',
     url( r'post/archives/(?P<year>\d{4})/(?P<month>\d{1,2})/page/(?P<page>\d+)/(?P<num>\d+)/$', 'views.post_by_month', name="post_by_month_archive_num"), 
 
     url( r'links/$', 'views.links_list', name="links_list"), 
+    url( r'links/(?P<category>[\w_ -]+)/$', 'views.links_list_by_category', name="links_list_by_category"), 
 )

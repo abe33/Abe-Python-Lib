@@ -34,6 +34,8 @@ class PostCategory( BabelFishModel ):
     
     allow_comments = models.BooleanField(_(u"Allow comments"),  default=True )
     
+    parent = models.ForeignKey( 'PostCategory', blank=True, null=True, related_name='children' )
+    
     def get_count(self):
         if hasattr( self, "count" ):
             return self.count
@@ -46,6 +48,16 @@ class PostCategory( BabelFishModel ):
 
     def __unicode__(self):
         return u"%s" % self.name
+    
+    def has_children_categories(self):
+        return len(self.get_children_categories()) > 0
+        
+    def get_children_categories(self):
+        if hasattr( self, "children_categories" ):
+            return self.children_categories
+        else:   
+            setattr( self, "children_categories", self.children.all() )
+            return self.children_categories
 
     def to_dict(self):
         return {
@@ -291,6 +303,63 @@ class PostSitemap(Sitemap):
     def lastmod(self, obj):
         return obj.published_date
 
+class SiteLinkCategory( BabelFishModel ):
+    translate_fields = ('name','description')
+    bf_translations = BabelFishField( translate_fields )
+    
+    name = models.CharField( _(u"Link Category title"),  max_length=50 )
+    description = models.TextField(_(u"Link Category description"),  null=True,  blank=True)
+    slug = models.CharField( _(u"Link Category Slug"), max_length=50, null=True, blank=True )
+    
+    creation_date = models.DateTimeField( _(u"Creation date"),  auto_now_add=True )
+    update_date = models.DateTimeField( _(u"Update date"),  auto_now=True )
+    
+    parent = models.ForeignKey( 'SiteLinkCategory', blank=True, null=True, related_name='children' )
+    
+    def has_children_categories(self):
+        return len(self.get_children_categories()) > 0
+        
+    def get_children_categories(self):
+        if hasattr( self, "children_categories" ):
+            return self.children_categories
+        else:   
+            setattr( self, "children_categories", self.children.all() )
+            return self.children_categories
+    
+    def get_count(self):
+        if hasattr( self, "count" ):
+            return self.count
+        else :
+            setattr( self, "count", self.sitelink_set.all().count() )
+            return self.count
+      
+    def get_absolute_url(self):
+        return reverse( "links_list_by_category", kwargs={'category':self.slug} )
+
+    def __unicode__(self):
+        return u"%s" % self.name
+
+    def to_dict(self):
+        return {
+                'name':self.name,
+                'description':self.description,
+                'slug':self.slug,
+                }
+                
+    def save(self):
+        self.translate()
+        
+        if self.slug is None :
+            self.slug = slugify( self.name )
+            
+        super( SiteLinkCategory, self ).save()
+
+    class Meta:
+        auto_translate=True
+        verbose_name=_(u"Site Links Category")
+        verbose_name_plural=_(u"Site Links Categories")
+        ordering = ["name",]
+
 class SiteLink ( BabelFishModel ) :
     translate_fields = ('name','description')
     bf_translations = BabelFishField( translate_fields )
@@ -299,10 +368,14 @@ class SiteLink ( BabelFishModel ) :
     url = models.URLField( _(u"Link url"),  max_length=200,  verify_exists=True )
     icon = models.ImageField( upload_to="uploads/",  verbose_name=_(u"Link icon"),  null=True, blank=True )
     description = models.TextField(_(u"Link description"),  null=True,  blank=True)
-    creation_date = models.DateTimeField( _(u"Creation date"),  auto_now_add=True )
-    update_date = models.DateTimeField( _(u"Update date"),  auto_now=True )
+    
+    category = models.ForeignKey( SiteLinkCategory, verbose_name=_(u"Link Category"), null=True, blank=True )
     featured = models.BooleanField(_(u"Featured"), default=False, blank=True )
     rel = models.CharField( _(u"Relation Tag"), max_length=50, null=True,  blank=True )
+
+    creation_date = models.DateTimeField( _(u"Creation date"),  auto_now_add=True )
+    update_date = models.DateTimeField( _(u"Update date"),  auto_now=True )
+    
     def to_dict( self):
         return {
                 'name':self.name,

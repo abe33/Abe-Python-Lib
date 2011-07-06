@@ -25,13 +25,18 @@ register = Library()
 class SiteLinkNode(BaseTemplateNode):
     def  get__new_context_value(self,  context):
         return list( SiteLink.objects.all().order_by("?")[:5] )
+
+class SiteLinkCategoryNode(BaseTemplateNode):
+    def  get__new_context_value(self,  context):
+        return list( SiteLinkCategory.objects.filter(parent__isnull=True) )
+
 class CommentArchivesNode(BaseTemplateNode):
     def  get__new_context_value(self,  context):
         return list( Comment.objects.dates('submit_date', 'month', order='DESC') )
 
 class PostCategoryNode(BaseTemplateNode):
     def  get__new_context_value(self,  context):
-        return list( PostCategory.objects.all() )
+        return list( PostCategory.objects.filter(parent__isnull=True) )
     
 class PostFeaturedNode(BaseTemplateNode):
     def  get__new_context_value(self,  context):
@@ -64,28 +69,31 @@ class SmartURLNode(AdvancedTemplateNode):
             return reverse( args[0] )
 
 def smart_url ( parser,  token ):
-    return SmartURLNode.handle_token( parser,  token )
+    return SmartURLNode.handle_token( parser, token )
 
 def get_post ( parser,  token ):
-    return PostNode.handle_token( parser,  token )
+    return PostNode.handle_token( parser, token )
 
 def get_post_by_comment_id ( parser,  token ):
-    return PostByCommentIDNode.handle_token( parser,  token )
+    return PostByCommentIDNode.handle_token( parser, token )
 
 def get_site_links_list ( parser,  token ):
-    return SiteLinkNode.handle_token( parser,  token )
+    return SiteLinkNode.handle_token( parser, token )
 
 def get_comment_archives_list ( parser,  token ):
-    return CommentArchivesNode.handle_token( parser,  token )
+    return CommentArchivesNode.handle_token( parser, token )
+
+def get_link_category_list ( parser,  token ):
+    return SiteLinkCategoryNode.handle_token( parser, token )
 
 def get_post_category_list ( parser,  token ):
-    return PostCategoryNode.handle_token( parser,  token )
+    return PostCategoryNode.handle_token( parser, token )
 
 def get_post_featured_list ( parser,  token ):
-    return PostFeaturedNode.handle_token( parser,  token )
+    return PostFeaturedNode.handle_token( parser, token )
     
 def get_post_archives_list ( parser,  token ):
-    return PostArchivesNode.handle_token( parser,  token )
+    return PostArchivesNode.handle_token( parser, token )
 
 def get_post_tags_list ( parser,  token ):
     return PostTagsNode.handle_token( parser, token )
@@ -108,8 +116,12 @@ def render_tag ( tag, tag_view=None):
 def render_comment( comment, index=0 ):
     return{ 'comment':comment, 'index':index }
 
-def render_categories_list():
-    objects = PostCategory.objects.all()
+def render_categories_list( categories=None ):
+    if categories is None : 
+        objects = PostCategory.objects.filter(parent__isnull=True)
+    else:
+        objects = categories
+    
     return { 'categories':objects }
     
 def render_archives_list( archives, archive_view=None, archive_view_year=None, archive_view_month=None ):
@@ -195,6 +207,7 @@ register.tag( smart_url )
 register.tag( get_post )
 register.tag( get_post_by_comment_id )
 register.tag( get_comment_archives_list )
+register.tag( get_link_category_list )
 register.tag( get_post_category_list )
 register.tag( get_post_featured_list )
 register.tag( get_post_archives_list )

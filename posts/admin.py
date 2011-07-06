@@ -27,12 +27,12 @@ class PostAdmin(BabelFishAdmin):
         js = post_settings.POST_ADMIN_JS + ( "%sjs/post_enhancements.js" % settings.MEDIA_URL, )
 
 class PostCategoryAdmin(BabelFishAdmin):
-    list_display=("name","slug","creation_date", "update_date", )
+    list_display=("name","slug","creation_date", "update_date", "parent", )
     list_display_links = ('name', )
     fieldsets = [
         ( _(u'Content'),   {'fields': ['name', 'description'] }),
         ( _(u'BabelFish'), {'fields': ['bf_translations',] }),
-        ( _(u'Extra'),   {'fields': [ 'slug','allow_comments'] }),
+        ( _(u'Extra'),   {'fields': [ 'slug','allow_comments','parent'] }),
     ]
     class Media:
         css = {"all": post_settings.POST_ADMIN_CSS + ( "%scss/post_enhancements.css" % settings.MEDIA_URL, )}
@@ -50,15 +50,27 @@ class PostGroupAdmin(BabelFishAdmin):
         css = {"all": post_settings.POST_ADMIN_CSS + ( "%scss/post_enhancements.css" % settings.MEDIA_URL, )}
         js = post_settings.POST_ADMIN_JS + ( "%sjs/post_enhancements.js" % settings.MEDIA_URL, )
 
+class SiteLinkCategoryAdmin(BabelFishAdmin):
+    list_display=("name","creation_date", "update_date", 'slug' )
+    list_display_links = ('name', 'slug', )
+    fieldsets = [
+        ( _(u'Content'),   {'fields': ['name','description','slug' ] } ),
+        ( _(u'BabelFish'), {'fields': ['bf_translations',] }),
+        ( _(u'Extra'),     {'fields': ['parent',] } ),
+    ]
+    class Media:
+        css = {"all": post_settings.POST_ADMIN_CSS + ( "%scss/post_enhancements.css" % settings.MEDIA_URL, )}
+        js = post_settings.POST_ADMIN_JS + ( "%sjs/post_enhancements.js" % settings.MEDIA_URL, )
+
 class SiteLinkAdmin(BabelFishAdmin):
-    list_display=("name","creation_date", "update_date", 'featured', 'rel' )
+    list_display=("name","creation_date", "update_date", 'featured', 'rel','category' )
     list_display_links = ('name', )
     list_filter=("featured", "rel", ) 
     list_editable=("rel", 'featured', )
     fieldsets = [
         ( _(u'Content'),   {'fields': ['name','url','description', ] } ),
         ( _(u'BabelFish'), {'fields': ['bf_translations',] }),
-        ( _(u'Extra'),     {'fields': ['icon','featured','rel',] } ),
+        ( _(u'Extra'),     {'fields': ['icon','featured','rel','category'] } ),
     ]
     class Media:
         css = {"all": post_settings.POST_ADMIN_CSS + ( "%scss/post_enhancements.css" % settings.MEDIA_URL, )}
@@ -68,3 +80,5 @@ admin.site.register(Post, PostAdmin )
 admin.site.register(PostGroup, PostGroupAdmin )
 admin.site.register(PostCategory, PostCategoryAdmin )
 admin.site.register(SiteLink, SiteLinkAdmin )
+admin.site.register(SiteLinkCategory, SiteLinkCategoryAdmin )
+
