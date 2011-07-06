@@ -26,11 +26,7 @@ class SiteLinkNode(AdvancedTemplateNode):
     def  get__new_context_value(self,  context):    
         f = self.for_object
         l = f.split("=")
-        
         kwargs = { l[0] : l[1] }
-        
-        print kwargs
-        
         return list( SiteLink.objects.filter( **kwargs ).order_by("name") )
 
 class SiteLinkCategoryNode(BaseTemplateNode):
